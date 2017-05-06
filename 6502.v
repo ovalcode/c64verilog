@@ -28,8 +28,9 @@ module _6502(di, clk, reset, we, ab);
   begin
     pc <= pc_temp + pc_inc;
     //ab <= pc;
-    $display("Hello %d, %d", pc, clk);
-    $display("Hello2 %d, %d", di, clk);
+    $display("Hello pc %d, %d", pc, clk);
+    $display("Hello2 di %d, %d", di, clk);
+    $display("Hello3 acc %d, %d", acc, clk);
   end
 
   //change pc_temp and pc_inc
@@ -39,6 +40,7 @@ module _6502(di, clk, reset, we, ab);
                  pc_temp = 0;
                  pc_inc = 0;
                end
+       default: pc_inc = 1;
       //everything starts happening at RESET_1 -> should actually be DECODE??
     endcase
 
