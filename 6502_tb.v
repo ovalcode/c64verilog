@@ -55,8 +55,18 @@ module test;
   wire [7:0] di;
   wire [15:0] ab;
   wire we;
-  assign di = ram[ab];
-  _6502 c1 (di, clk, reset, we, ab);
+  //assign di = ram[ab];
+
+  //todo do high impedenance thing right 
+  always (posedge clk)
+  if (we)
+    r
+
+  always (posedge clk)
+  if (we)
+    di = ram[ab];
+
+  _6502 c1 (di, do, clk, reset, we, ab);
 
 
   //always @(posedge clk)

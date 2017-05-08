@@ -1,4 +1,4 @@
-module _6502(di, clk, reset, we, ab);
+module _6502(di, do, clk, reset, we, ab);
 
   parameter WIDTH = 8;
   parameter RESET_0 = 8'd0,
@@ -7,12 +7,15 @@ module _6502(di, clk, reset, we, ab);
 
   reg [7:0] state;
 
+  reg [7:0] temp_data;
+
   input [WIDTH-1 : 0] di;
   output reg [15:0] ab;
   input 	       clk, reset;
   output we;
   reg [7:0] acc;
   reg load_acc;
+  output reg [7:0] do;
 
 //  reg [WIDTH-1 : 0]   out;
   reg we;
@@ -25,6 +28,9 @@ module _6502(di, clk, reset, we, ab);
   // everything except state 0 -> increment pc by one
 
   always @(posedge clk)
+  temp_data <= di;
+
+  always @(posedge clk)
   begin
     pc <= pc_temp + pc_inc;
     //ab <= pc;
@@ -32,6 +38,7 @@ module _6502(di, clk, reset, we, ab);
     $display("Hello2 di %d, %d", di, clk);
     $display("Hello3 acc %d, %d", acc, clk);
   end
+
 
   //change pc_temp and pc_inc
   always @*
@@ -47,8 +54,16 @@ module _6502(di, clk, reset, we, ab);
   //address generator
   always @*
     case(state)
+      ABS1: ab = { di, temp_data };
       default: ab = pc;
     endcase
+
+  //write enable generator
+  always @(posedge clk)
+  case(state)
+    ABS1: we = 1;
+    default: we = 0;
+  endcase
 
   //set register
   always @(posedge clk)
@@ -57,20 +72,23 @@ module _6502(di, clk, reset, we, ab);
       8'ha9: load_acc <= 1;
       default: load_acc <= 0;
     endcase
+
+  //store
+  always @(posedge clk)
+  if (state == DECODE)
+    case(di)
+      8'h8d: store_acc <= 1;
+      default: store_acc <= 0;
+    endcase
   
   always @(posedge clk)
   if (load_acc)
     acc <= di;
 
-   //write block parsing instruction codes
-  always @*
-    case(state)
-      DECODE: case(di)
-                8'ha9: state <= DECODE;//what must be done with LDA#imm?;
-                //for decode increment PC
-                //this should form part of state machine
-              endcase
-    endcase
+  always @(posedge clk)
+  if (store_acc)
+    do = acc;
+
 
   //state machine
   always @(posedge clk or posedge reset)
@@ -82,8 +100,12 @@ module _6502(di, clk, reset, we, ab);
   else case (state)
       DECODE: case (di)
                 8'ha9: state <= DECODE;//do something//set next state
+                8'h8d: state <= ABS0;
               endcase
       RESET_0: state <= DECODE;
+      ABS0: state <= ABS1;
+      ABS1: state <= ABS2;
+      ABS2: state <= DECODE;
       //RESET_1: state <= RESET_2;
       //RESET_2: state <= RESET_3;
       //RESET_3: state <= RESET_4;
