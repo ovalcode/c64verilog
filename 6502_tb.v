@@ -7,9 +7,9 @@ module test;
   initial begin
      ram[0] = 8'ha9;
      ram[1] = 8'd20;
-     ram[2] = 8'd3;
-     ram[3] = 8'd3;
-     ram[4] = 8'd3;
+     ram[2] = 8'h8d;
+     ram[3] = 8'h14;
+     ram[4] = 8'd0;
      ram[5] = 8'd3;
      ram[6] = 8'd3;
      ram[7] = 8'd3;
@@ -53,18 +53,18 @@ module test;
   //wire [7:0] value;
   //reg di = 0;
   wire [7:0] di;
+  wire [7:0] do;
   wire [15:0] ab;
   wire we;
   //assign di = ram[ab];
 
-  //todo do high impedenance thing right 
-  always (posedge clk)
-  if (we)
-    r
 
-  always (posedge clk)
+  always @(posedge clk)
   if (we)
-    di = ram[ab];
+    ram[ab] = do;
+
+  //always @(posedge clk)
+  assign di = we ? 8'hzz : ram[ab] ;
 
   _6502 c1 (di, do, clk, reset, we, ab);
 

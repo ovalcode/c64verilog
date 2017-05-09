@@ -2,8 +2,12 @@ module _6502(di, do, clk, reset, we, ab);
 
   parameter WIDTH = 8;
   parameter RESET_0 = 8'd0,
+            ABS0 = 8'd1,
+            ABS1 = 8'd2,
+            ABS2 = 8'd3,            
+
             //RESET_1 = 8'd1;
-            DECODE = 8'd1;
+            DECODE = 8'd4;
 
   reg [7:0] state;
 
@@ -15,6 +19,7 @@ module _6502(di, do, clk, reset, we, ab);
   output we;
   reg [7:0] acc;
   reg load_acc;
+  reg store_acc;
   output reg [7:0] do;
 
 //  reg [WIDTH-1 : 0]   out;
