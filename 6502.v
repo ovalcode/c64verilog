@@ -39,17 +39,24 @@ module _6502(di, do, clk, reset, we, ab);
   begin
     pc <= pc_temp + pc_inc;
     //ab <= pc;
-    $display("Hello pc %d, %d", pc, clk);
-    $display("Hello2 di %d, %d", di, clk);
-    $display("Hello3 acc %d, %d", acc, clk);
+    $display("Hello pc %d, %d, %d, %d, %d, %d", pc, clk, ab, di, do, we);
+    //$display("Hello2 di %d, %d", di, clk);
+    //$display("Hello3 acc %d, %d", acc, clk);
   end
 
-
-  //change pc_temp and pc_inc
+  //update pctemp
   always @*
     case(state)
       RESET_0: begin 
                  pc_temp = 0;
+               end
+       default: pc_temp = pc;
+    endcase
+
+  //change pc_inc
+  always @*
+    case(state)
+      RESET_0: begin 
                  pc_inc = 0;
                end
        default: pc_inc = 1;
