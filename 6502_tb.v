@@ -6,20 +6,20 @@ module test;
   reg [7:0] ram [0:27];
   initial begin
      ram[0] = 8'ha9;
-     ram[1] = 8'd20;
+     ram[1] = 8'd39;
      ram[2] = 8'h8d;
-     ram[3] = 8'h14;
+     ram[3] = 8'h11;
      ram[4] = 8'd0;
-     ram[5] = 8'd3;
-     ram[6] = 8'd3;
-     ram[7] = 8'd3;
-     ram[8] = 8'd3;
-     ram[9] = 8'd3;
-     ram[10] = 8'd3;
-     ram[11] = 8'd3;
-     ram[12] = 8'd3;
-     ram[13] = 8'd3;
-     ram[14] = 8'd3;
+     ram[5] = 8'ha9;
+     ram[6] = 8'd33;
+     ram[7] = 8'h8d;
+     ram[8] = 8'd22;
+     ram[9] = 8'h0;
+     ram[10] = 8'ha9;
+     ram[11] = 8'h47;
+     ram[12] = 8'h8d;
+     ram[13] = 8'd23;
+     ram[14] = 8'd0;
      ram[15] = 8'd3;
      ram[16] = 8'd9;
      ram[17] = 8'd9;
@@ -37,7 +37,7 @@ module test;
 
      #10 reset = 1;
      #10 reset = 0;
-     #100 $stop;
+     #200 $stop;
 
      //# 17 reset = 1;
      //# 11 reset = 0;
@@ -48,7 +48,7 @@ module test;
 
   /* Make a regular pulsing clock. */
   reg clk = 0;
-  always #1 clk = !clk;
+  always #5 clk = !clk;
 
   //wire [7:0] value;
   //reg di = 0;
@@ -56,15 +56,29 @@ module test;
   wire [7:0] do;
   wire [15:0] ab;
   wire we;
+  reg [7:0] temp_ram_out;
   //assign di = ram[ab];
+
+  always @(posedge clk)
+    $display("dddd %d", we);
 
 
   always @(posedge clk)
+  begin
   if (we)
     ram[ab] = do;
+  $display("hhhh %d %d %d", we, do, ab);
+  end
 
   //always @(posedge clk)
-  assign di = we ? 8'hzz : ram[ab] ;
+  //if (!we)
+  //  temp_ram_out <= ram[ab];
+
+  always @(posedge clk)
+    $display("mem %d %d %d", ram[17], ram[22], ram[23]);
+
+  //always @(posedge clk)
+  assign di = we ? 8'hzz : ram[ab]/*temp_ram_out*/ ;
 
   _6502 c1 (di, do, clk, reset, we, ab);
 

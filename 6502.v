@@ -39,7 +39,7 @@ module _6502(di, do, clk, reset, we, ab);
   begin
     pc <= pc_temp + pc_inc;
     //ab <= pc;
-    $display("Hello pc %d, %d, %d, %d, %d, %d", pc, clk, ab, di, do, we);
+    $display("Hello pc %d, %d, %d, %d, %d, %d, %d, %d", pc, clk, ab, di, do, we, state, temp_data);
     //$display("Hello2 di %d, %d", di, clk);
     //$display("Hello3 acc %d, %d", acc, clk);
   end
@@ -49,6 +49,7 @@ module _6502(di, do, clk, reset, we, ab);
     case(state)
       RESET_0: begin 
                  pc_temp = 0;
+                 $display("setting");
                end
        default: pc_temp = pc;
     endcase
@@ -56,7 +57,8 @@ module _6502(di, do, clk, reset, we, ab);
   //change pc_inc
   always @*
     case(state)
-      RESET_0: begin 
+       ABS1,
+       RESET_0: begin 
                  pc_inc = 0;
                end
        default: pc_inc = 1;
@@ -64,18 +66,21 @@ module _6502(di, do, clk, reset, we, ab);
     endcase
 
   //address generator
-  always @*
+  always @(posedge clk)
     case(state)
-      ABS1: ab = { di, temp_data };
-      default: ab = pc;
+      ABS1: ab <= { di, temp_data };
+      default: ab <= pc;
     endcase
 
   //write enable generator
   always @(posedge clk)
+  begin
   case(state)
-    ABS1: we = 1;
-    default: we = 0;
+    ABS1: we <= 1;
+    default: we <= 0;
   endcase
+  $display("ssss %d", we);
+  end
 
   //set register
   always @(posedge clk)
