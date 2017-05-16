@@ -17,9 +17,9 @@ module _6502(di, do, clk, reset, we, ab);
   output reg [15:0] ab;
   input 	       clk, reset;
   output we;
-  reg [7:0] acc;
-  reg load_acc;
-  reg store_acc;
+  reg [7:0] AXYS [3:0];
+  reg load;
+  reg store;
   output reg [7:0] do;
 
 //  reg [WIDTH-1 : 0]   out;
@@ -27,6 +27,7 @@ module _6502(di, do, clk, reset, we, ab);
   reg [15:0] pc;
   reg [15:0] pc_temp;
   reg [15:0] pc_inc;
+  reg [1:0] reg_num;
   wire 	       clk, reset;
 
   //state 0 -> reset everything pc, ab to 0
@@ -86,25 +87,34 @@ module _6502(di, do, clk, reset, we, ab);
   always @(posedge clk)
   if (state == DECODE)
     case(di)
-      8'ha9: load_acc <= 1;
-      default: load_acc <= 0;
+      8'b101xxxxx : load <= 1; //LDA, LDX, LDY
+      default: load <= 0;
     endcase
 
   //store
   always @(posedge clk)
   if (state == DECODE)
     case(di)
-      8'h8d: store_acc <= 1;
-      default: store_acc <= 0;
+      8'b100xxxxx: store <= 1; //STA, STX, STY
+      default: store <= 0;
+    endcase
+
+  always @(posedge clk)
+  if (state == DECODE)
+    case(di)
+      8'bxxxxxx01: reg_num <= 0; //accumulator
+      8'bxxxxxx10: reg_num <= 1; //X
+      8'bxxxxxx00: reg_num <= 2; //Y
+      default: reg_num <= 0;
     endcase
   
   always @(posedge clk)
-  if (load_acc)
-    acc <= di;
+  if (load)
+    AXYS[reg_num] <= di;
 
   always @(posedge clk)
-  if (store_acc)
-    do = acc;
+  if (store)
+    do = AXYS[reg_num];
 
 
   //state machine
@@ -116,8 +126,8 @@ module _6502(di, do, clk, reset, we, ab);
   end
   else case (state)
       DECODE: case (di)
-                8'ha9: state <= DECODE;//do something//set next state
-                8'h8d: state <= ABS0;
+                8'bxxx010xx: state <= DECODE;//Next state for immediate mode isntructions
+                8'bxxx011xx: state <= ABS0; //Next state for immediate mode isntructions
               endcase
       RESET_0: state <= DECODE;
       ABS0: state <= ABS1;
