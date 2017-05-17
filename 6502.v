@@ -40,7 +40,8 @@ module _6502(di, do, clk, reset, we, ab);
   begin
     pc <= pc_temp + pc_inc;
     //ab <= pc;
-    $display("Hello pc %d, %d, %d, %d, %d, %d, %d, %d", pc, clk, ab, di, do, we, state, temp_data);
+    $display("Hello pc %d, %d, %d, %d, %d, %d, %d, %d, %d, %d", pc, clk, ab, di, do, we, state, temp_data, reg_num, AXYS[0]);
+    $display("Registers A:%d, X:%d, Y:%d", AXYS[0], AXYS[1], AXYS[2]);
     //$display("Hello2 di %d, %d", di, clk);
     //$display("Hello3 acc %d, %d", acc, clk);
   end
@@ -86,7 +87,7 @@ module _6502(di, do, clk, reset, we, ab);
   //set register
   always @(posedge clk)
   if (state == DECODE)
-    case(di)
+    casex(di)
       8'b101xxxxx : load <= 1; //LDA, LDX, LDY
       default: load <= 0;
     endcase
@@ -94,14 +95,14 @@ module _6502(di, do, clk, reset, we, ab);
   //store
   always @(posedge clk)
   if (state == DECODE)
-    case(di)
+    casex(di)
       8'b100xxxxx: store <= 1; //STA, STX, STY
       default: store <= 0;
     endcase
 
   always @(posedge clk)
   if (state == DECODE)
-    case(di)
+    casex(di)
       8'bxxxxxx01: reg_num <= 0; //accumulator
       8'bxxxxxx10: reg_num <= 1; //X
       8'bxxxxxx00: reg_num <= 2; //Y
@@ -125,7 +126,7 @@ module _6502(di, do, clk, reset, we, ab);
       //pc <= 0;
   end
   else case (state)
-      DECODE: case (di)
+      DECODE: casex (di)
                 8'bxxx010xx: state <= DECODE;//Next state for immediate mode isntructions
                 8'bxxx011xx: state <= ABS0; //Next state for immediate mode isntructions
               endcase
