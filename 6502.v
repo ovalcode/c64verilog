@@ -8,7 +8,8 @@ module _6502(di, do, clk, reset, we, ab);
             ABS1 = 8'd4,
             ABS2 = 8'd5,            
             ZP0 = 8'd6,
-            ZP1 = 8'd7;
+            ZP1 = 8'd7,
+            FETCH = 8'd8;
             //RESET_1 = 8'd1;
 
 
@@ -134,7 +135,8 @@ module _6502(di, do, clk, reset, we, ab);
   end
   else case (state)
       DECODE: casex (di)
-                8'bxxx010xx: state <= DECODE;//Next state for immediate mode isntructions
+                8'bxxx01001,
+                8'bxxx000x0: state <= FETCH;//Next state for immediate mode isntructions
                 8'bxxx011xx: state <= ABS0; //Next state for absolute mode isntructions
                 8'bxxx001xx: state <= ZP0; //Next state for zero page mode isntructions
               endcase
@@ -145,6 +147,7 @@ module _6502(di, do, clk, reset, we, ab);
       ABS2: state <= DECODE;
       ZP0: state <= ZP1;
       ZP1: state <= DECODE;
+      FETCH: state <= DECODE;
       //RESET_1: state <= RESET_2;
       //RESET_2: state <= RESET_3;
       //RESET_3: state <= RESET_4;
