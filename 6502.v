@@ -78,7 +78,7 @@ module _6502(di, do, clk, reset, we, ab);
   always @(posedge clk)
   begin
   case(state)
-    ABS1: we <= 1;
+    ABS1: we <= store;
     default: we <= 0;
   endcase
   $display("ssss %d", we);
