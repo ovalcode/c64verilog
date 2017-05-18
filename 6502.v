@@ -2,12 +2,14 @@ module _6502(di, do, clk, reset, we, ab);
 
   parameter WIDTH = 8;
   parameter RESET_0 = 8'd0,
-            ABS0 = 8'd1,
-            ABS1 = 8'd2,
-            ABS2 = 8'd3,            
-
+            DECODE = 8'd1,
+            ABS0 = 8'd2,
+            ABS1 = 8'd3,
+            ABS2 = 8'd4,            
+            ZP0 = 8'd5,
+            ZP1 = 8'd6;
             //RESET_1 = 8'd1;
-            DECODE = 8'd4;
+
 
   reg [7:0] state;
 
@@ -60,6 +62,7 @@ module _6502(di, do, clk, reset, we, ab);
   always @*
     case(state)
        ABS1,
+       ZP0,
        RESET_0: begin 
                  pc_inc = 0;
                end
@@ -71,6 +74,7 @@ module _6502(di, do, clk, reset, we, ab);
   always @(posedge clk)
     case(state)
       ABS1: ab <= { di, temp_data };
+      ZP0: ab <= {0, di};
       default: ab <= pc;
     endcase
 
@@ -78,6 +82,7 @@ module _6502(di, do, clk, reset, we, ab);
   always @(posedge clk)
   begin
   case(state)
+    ZP0,
     ABS1: we <= store;
     default: we <= 0;
   endcase
@@ -128,12 +133,15 @@ module _6502(di, do, clk, reset, we, ab);
   else case (state)
       DECODE: casex (di)
                 8'bxxx010xx: state <= DECODE;//Next state for immediate mode isntructions
-                8'bxxx011xx: state <= ABS0; //Next state for immediate mode isntructions
+                8'bxxx011xx: state <= ABS0; //Next state for absolute mode isntructions
+                8'bxxx001xx: state <= ZP0; //Next state for zero page mode isntructions
               endcase
       RESET_0: state <= DECODE;
       ABS0: state <= ABS1;
       ABS1: state <= ABS2;
       ABS2: state <= DECODE;
+      ZP0: state <= ZP1;
+      ZP1: state <= DECODE;
       //RESET_1: state <= RESET_2;
       //RESET_2: state <= RESET_3;
       //RESET_3: state <= RESET_4;
