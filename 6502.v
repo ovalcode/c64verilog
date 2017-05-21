@@ -1,5 +1,11 @@
 module _6502(di, do, clk, reset, we, ab);
 
+//source
+//dest
+//regnum -> state driven choose src/dst/indxy
+//index y/x
+//registerfile
+
   parameter WIDTH = 8;
   parameter RESET_0 = 8'd0,
             RESET_1 = 8'd1,
@@ -16,6 +22,9 @@ module _6502(di, do, clk, reset, we, ab);
   reg [7:0] state;
 
   reg [7:0] temp_data;
+  reg [7:0] alu_in_a;
+  reg [7:0] alu_in_b;
+  wire [8:0] temp_alu_result;
 
   input [WIDTH-1 : 0] di;
   output reg [15:0] ab;
@@ -32,13 +41,22 @@ module _6502(di, do, clk, reset, we, ab);
   reg [15:0] pc_temp;
   reg [15:0] pc_inc;
   reg [1:0] reg_num;
+  reg [1:0] src;
+  reg [1:0] dst;
+  wire [7:0] regfile = AXYS[reg_num];
   wire 	       clk, reset;
 
-  //state 0 -> reset everything pc, ab to 0
-  // everything except state 0 -> increment pc by one
+//alu register stores as soon as inputs change
+//still need to have temp_data to sotre previous
+  assign temp_alu_result = alu_in_a + alu_in_b;
+  
+  always @*
+      alu_in_a <= di;
 
+  always
+ 
   always @(posedge clk)
-  temp_data <= di;
+  temp_alu <= di + 0;
 
   always @(posedge clk)
   begin
@@ -107,14 +125,30 @@ module _6502(di, do, clk, reset, we, ab);
       default: store <= 0;
     endcase
 
+  always @*
+  casex(state)
+      DECODE: reg_num <= dst; 
+      default: reg_num <= src;
+    endcase
+
   always @(posedge clk)
   if (state == DECODE)
     casex(di)
-      8'bxxxxxx01: reg_num <= 0; //accumulator
-      8'bxxxxxx10: reg_num <= 1; //X
-      8'bxxxxxx00: reg_num <= 2; //Y
-      default: reg_num <= 0;
+      8'b100xxx01: src <= 0; //accumulator
+      8'b100xxx10: src <= 1; //X
+      8'b100xxx00: src <= 2; //Y
+      default: src <= 0;
     endcase
+
+  always @(posedge clk)
+  if (state == DECODE)
+    casex(di)
+      8'b101xxx01: dst <= 0; //accumulator
+      8'b101xxx10: dst <= 1; //X
+      8'b101xxx00: dst <= 2; //Y
+      default: dst <= 0;
+    endcase
+
   
   always @(state)
   if ((state == DECODE) & load)
@@ -123,7 +157,7 @@ module _6502(di, do, clk, reset, we, ab);
 
   always @(posedge clk)
   if (store)
-    do = AXYS[reg_num];
+    do = regfile;/*AXYS[reg_num]*/;
 
 
   //state machine
