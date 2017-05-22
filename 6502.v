@@ -6,6 +6,10 @@ module _6502(di, do, clk, reset, we, ab);
 //index y/x
 //registerfile
 
+//new todo: wirre up alu inputs + outputs
+//NB!! temp_alu_result has nine bits -> use one for carry
+//wire assignment above already done. focus surroundings regsiters
+
   parameter WIDTH = 8;
   parameter RESET_0 = 8'd0,
             RESET_1 = 8'd1,
@@ -53,10 +57,12 @@ module _6502(di, do, clk, reset, we, ab);
   always @*
       alu_in_a <= di;
 
-  always
+  always @*
+      alu_in_b <= 0;
+
  
   always @(posedge clk)
-  temp_alu <= di + 0;
+    temp_data <= temp_alu_result;
 
   always @(posedge clk)
   begin
@@ -157,7 +163,7 @@ module _6502(di, do, clk, reset, we, ab);
 
   always @(posedge clk)
   if (store)
-    do = regfile;/*AXYS[reg_num]*/;
+    do = regfile;
 
 
   //state machine
