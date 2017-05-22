@@ -10,7 +10,9 @@ module test;
        //$display("init %d", i);
      end
 
-   /*ram[0] = 8'ha9;
+//----------------------------------------------------------------
+//Test Program 1
+   ram[0] = 8'ha9;
      ram[1] = 8'd39;
      ram[2] = 8'h8d;
      ram[3] = 8'h11;
@@ -39,8 +41,11 @@ module test;
      ram[25] = 8'd19;
      ram[26] = 8'd20;
      ram[27] = 8'd21;
-*/
-     ram[0] = 8'hae;
+
+
+//-----------------------------------------------------------------------
+//Test program 2
+/*     ram[0] = 8'hae;
      ram[1] = 0;
      ram[2] = 4;
      ram[3] = 8'h8e;
@@ -52,11 +57,16 @@ module test;
      ram[9] = 8'h35; 
 
      ram[16'h30] = 71;
-     ram[16'h400] = 90;
+     ram[16'h400] = 90;*/
      //LDX $400
      //STX $440
      //LDA $30
      //STA $35
+
+//--------------------------------------------------------------------------
+//Test Program 3
+
+//--------------------------------------------------------------------------
 
      #10 reset = 1;
      #10 reset = 0;
@@ -99,8 +109,8 @@ module test;
   //  temp_ram_out <= ram[ab];
 
   always @(posedge clk)
-    $display("mem %d %d %d", ram[16'h440], ram[16'h35], ram[23]);
-//$display("mem %d %d %d", ram[17], ram[22], ram[23]);
+    //$display("mem %d %d %d", ram[16'h440], ram[16'h35], ram[23]);
+$display("mem %d %d %d", ram[17], ram[22], ram[23]);
 
   //always @(posedge clk)
   assign di = we ? 8'hzz : ram[ab]/*temp_ram_out*/ ;
