@@ -27,8 +27,9 @@ module _6502(di, do, clk, reset, we, ab);
 
   reg [7:0] temp_data;
   reg [7:0] alu_in_a;
-  reg [7:0] alu_in_b;
+  reg [7:0] alu_in_b = 0;
   wire [8:0] temp_alu_result;
+  reg save_value_to_register;
 
   input [WIDTH-1 : 0] di;
   output reg [15:0] ab;
@@ -57,8 +58,9 @@ module _6502(di, do, clk, reset, we, ab);
   always @*
       alu_in_a <= di;
 
-  always @*
-      alu_in_b <= 0;
+  //always @*
+  //todo:change back to always block when additional conditions
+  //assign alu_in_b = 0;
 
  
   always @(posedge clk)
@@ -68,7 +70,9 @@ module _6502(di, do, clk, reset, we, ab);
   begin
     pc <= pc_temp + pc_inc;
     //ab <= pc;
-    $display("Hello pc %d, %d, %d, %d, %d, %d, %d, %d, %d, %d", pc, clk, ab, di, do, we, state, temp_data, reg_num, AXYS[0]);
+    //$display("Hello pc %d, %d, %d, %d, %d, %d, %d, %d, %d, %d", pc, clk, ab, di, do, we, state, temp_data, reg_num, AXYS[0]);
+    $display("Data, address:%d, we:%d, state:%d, regnum: %d, src:%d, dst:%d", ab, we, state, reg_num, src, dst);
+    //ab we state reg_num, src, dst, 
     $display("Registers A:%d, X:%d, Y:%d", AXYS[0], AXYS[1], AXYS[2]);
     //$display("Hello2 di %d, %d", di, clk);
     //$display("Hello3 acc %d, %d", acc, clk);
@@ -155,9 +159,14 @@ module _6502(di, do, clk, reset, we, ab);
       default: dst <= 0;
     endcase
 
+  always @*
+    case (state)
+      DECODE: save_value_to_register = load;
+      default: save_value_to_register = 0; 
+    endcase
   
-  always @(state)
-  if ((state == DECODE) & load)
+  always @(posedge clk)
+  if (save_value_to_register)
 //  if (load)
     AXYS[reg_num] <= temp_data;
 
