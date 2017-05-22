@@ -16,10 +16,13 @@ module _6502(di, do, clk, reset, we, ab);
             DECODE = 8'd2,
             ABS0 = 8'd3,
             ABS1 = 8'd4,
-            ABS2 = 8'd5,            
-            ZP0 = 8'd6,
-            ZP1 = 8'd7,
-            FETCH = 8'd8;
+            ZP0 = 8'd5,
+            ZP1 = 8'd6,
+            FETCH = 8'd7,
+            STORE_TO_MEM = 8'd8,
+            ABSX0 = 8'd9,
+            ABSX1 = 8'd10,
+            ABSX2 = 8'd11;
             //RESET_1 = 8'd1;
 
 
@@ -135,6 +138,8 @@ module _6502(di, do, clk, reset, we, ab);
       default: store <= 0;
     endcase
 
+  //todo: create lways block for indexy/x
+
   always @*
   casex(state)
       DECODE: reg_num <= dst; 
@@ -188,12 +193,17 @@ module _6502(di, do, clk, reset, we, ab);
                 8'bxxx000x0: state <= FETCH;//Next state for immediate mode isntructions
                 8'bxxx011xx: state <= ABS0; //Next state for absolute mode isntructions
                 8'bxxx001xx: state <= ZP0; //Next state for zero page mode isntructions
+                8'bxxx11001: state <= ABSX0;
+                8'bxxx111xx: state <= ABSX0;
               endcase
       RESET_0: state <= RESET_1;
       RESET_1: state <= DECODE;
       ABS0: state <= ABS1;
-      ABS1: state <= ABS2;
-      ABS2: state <= DECODE;
+      ABS1: state <= STORE_TO_MEM;
+      ABSX0: state <= ABSX1;
+      ABSX1: state <= ABSX2;
+      //NB!! check absx2 scenario
+      STORE_TO_MEM: state <= DECODE;
       ZP0: state <= ZP1;
       ZP1: state <= DECODE;
       FETCH: state <= DECODE;
