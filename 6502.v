@@ -30,7 +30,7 @@ module _6502(di, do, clk, reset, we, ab);
 
   reg [7:0] temp_data;
   reg [7:0] alu_in_a;
-  reg [7:0] alu_in_b = 0;
+  reg [7:0] alu_in_b;
   wire [8:0] temp_alu_result;
   reg save_value_to_register;
 
@@ -51,6 +51,7 @@ module _6502(di, do, clk, reset, we, ab);
   reg [1:0] reg_num;
   reg [1:0] src;
   reg [1:0] dst;
+  reg index_y;
   wire [7:0] regfile = AXYS[reg_num];
   wire 	       clk, reset;
 
@@ -61,9 +62,11 @@ module _6502(di, do, clk, reset, we, ab);
   always @*
       alu_in_a <= di;
 
-  //always @*
+  always @*
+    case(state)
+      ABSX0: alu_in_b = regfile;
   //todo:change back to always block when additional conditions
-  //assign alu_in_b = 0;
+      default: alu_in_b = 0;
 
  
   always @(posedge clk)
@@ -140,8 +143,17 @@ module _6502(di, do, clk, reset, we, ab);
 
   //todo: create lways block for indexy/x
 
+  always @(posedge clk)
+  if (state == DECODE)
+    casex(di) 
+      8'bxxx11001: index_y = 1;
+      default: index_y = 0;
+    endcase
+
+
   always @*
   casex(state)
+      ABSX0: reg_num = index_y ? 2 : 1;
       DECODE: reg_num <= dst; 
       default: reg_num <= src;
     endcase
