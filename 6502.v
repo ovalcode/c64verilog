@@ -67,7 +67,7 @@ module _6502(di, do, clk, reset, we, ab);
       ABSX0: alu_in_b = regfile;
   //todo:change back to always block when additional conditions
       default: alu_in_b = 0;
-
+    endcase
  
   always @(posedge clk)
     temp_data <= temp_alu_result;
@@ -77,7 +77,7 @@ module _6502(di, do, clk, reset, we, ab);
     pc <= pc_temp + pc_inc;
     //ab <= pc;
     //$display("Hello pc %d, %d, %d, %d, %d, %d, %d, %d, %d, %d", pc, clk, ab, di, do, we, state, temp_data, reg_num, AXYS[0]);
-    $display("Data, address:%d, we:%d, state:%d, regnum: %d, src:%d, dst:%d", ab, we, state, reg_num, src, dst);
+    $display("Data, address:%d, we:%d, di:%d, do:%d state:%d, regnum: %d, src:%d, dst:%d", ab, we, di, do, state, reg_num, src, dst);
     //ab we state reg_num, src, dst, 
     $display("Registers A:%d, X:%d, Y:%d", AXYS[0], AXYS[1], AXYS[2]);
     //$display("Hello2 di %d, %d", di, clk);
@@ -98,6 +98,7 @@ module _6502(di, do, clk, reset, we, ab);
   always @*
     case(state)
        ABS1,
+       ABSX1,
        ZP0,
        RESET_0: begin 
                  pc_inc = 0;
@@ -110,6 +111,7 @@ module _6502(di, do, clk, reset, we, ab);
   always @(posedge clk)
     case(state)
       ABS1: ab <= { di, temp_data };
+      ABSX1: ab <= {di, temp_data};
       ZP0: ab <= {8'd0, di};
       default: ab <= pc;
     endcase
@@ -119,6 +121,7 @@ module _6502(di, do, clk, reset, we, ab);
   begin
   case(state)
     ZP0,
+    ABSX1,
     ABS1: we <= store;
     default: we <= 0;
   endcase
@@ -213,7 +216,7 @@ module _6502(di, do, clk, reset, we, ab);
       ABS0: state <= ABS1;
       ABS1: state <= STORE_TO_MEM;
       ABSX0: state <= ABSX1;
-      ABSX1: state <= ABSX2;
+      ABSX1: state <= STORE_TO_MEM;//ABSX2
       //NB!! check absx2 scenario
       STORE_TO_MEM: state <= DECODE;
       ZP0: state <= ZP1;
