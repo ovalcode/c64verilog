@@ -66,7 +66,7 @@ module test;
 //--------------------------------------------------------------------------
 //Test Program 3
 
-   ram[0] = 8'ha2;
+/*   ram[0] = 8'ha2;
    ram[1] = 8'h05;
    ram[2] = 8'ha0;
    ram[3] = 8'h0b;
@@ -76,12 +76,33 @@ module test;
    ram[7] = 8'h99;
    ram[8] = 8'h10;
    ram[9] = 8'h05;
-   ram[16'h50c] = 22;
+   ram[16'h50c] = 22; */
 /*
   LDX $5
   LDY $B
   LDA $507,X
   STA $510,Y
+*/
+
+//--------------------------------------------------------------------------
+//Test Program 4: ABS,X with carry
+
+   ram[0] = 8'ha2;
+   ram[1] = 8'h05;
+   ram[2] = 8'ha0;
+   ram[3] = 8'h0b;
+   ram[4] = 8'hbd;
+   ram[5] = 8'hfe;
+   ram[6] = 8'h05;
+   ram[7] = 8'h99;
+   ram[8] = 8'hfe;
+   ram[9] = 8'h05;
+   ram[16'h603] = 22;
+/*
+  LDX $5
+  LDY $B
+  LDA $5FE,X
+  STA $5FE,Y
 */
 //--------------------------------------------------------------------------
 
@@ -134,7 +155,10 @@ module test;
 //$display("mem %d %d %d", ram[16'h440], ram[16'h35], ram[23]);
 
 //Test program 3 debug
-$display("mem %d %d", ram[16'h50c], ram[16'h51b]);
+//$display("mem %d %d", ram[16'h50c], ram[16'h51b]);
+
+//Test program 4 debug
+$display("mem %d %d", ram[16'h603], ram[16'h609]);
 
   //always @(posedge clk)
   assign di = we ? 8'hzz : ram[ab]/*temp_ram_out*/ ;

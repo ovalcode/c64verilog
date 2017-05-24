@@ -27,7 +27,8 @@ module _6502(di, do, clk, reset, we, ab);
 
 
   reg [7:0] state;
-
+  reg alu_carry_out;
+  reg alu_carry_in;
   reg [7:0] temp_data;
   reg [7:0] alu_in_a;
   reg [7:0] alu_in_b;
@@ -36,6 +37,8 @@ module _6502(di, do, clk, reset, we, ab);
 
   input [WIDTH-1 : 0] di;
   output reg [15:0] ab;
+  reg [7:0] abl;
+  reg [7:0] abh;
   input 	       clk, reset;
   output we;
   reg [7:0] AXYS [3:0];
@@ -57,10 +60,22 @@ module _6502(di, do, clk, reset, we, ab);
 
 //alu register stores as soon as inputs change
 //still need to have temp_data to sotre previous
-  assign temp_alu_result = alu_in_a + alu_in_b;
+  assign temp_alu_result = alu_in_a + alu_in_b + alu_carry_in;
   
   always @*
       alu_in_a <= di;
+
+  always @*
+  begin
+    abl <= ab[7:0];
+    abh <= ab[15:8];
+  end
+
+  always @*
+      case(state)
+        ABSX1: alu_carry_in <= alu_carry_out;
+        default: alu_carry_in <= 0;
+      endcase
 
   always @*
     case(state)
@@ -73,11 +88,15 @@ module _6502(di, do, clk, reset, we, ab);
     temp_data <= temp_alu_result;
 
   always @(posedge clk)
+    alu_carry_out <= temp_alu_result[8];
+
+
+  always @(posedge clk)
   begin
     pc <= pc_temp + pc_inc;
     //ab <= pc;
     //$display("Hello pc %d, %d, %d, %d, %d, %d, %d, %d, %d, %d", pc, clk, ab, di, do, we, state, temp_data, reg_num, AXYS[0]);
-    $display("Data, address:%d, we:%d, di:%d, do:%d state:%d, regnum: %d, src:%d, dst:%d", ab, we, di, do, state, reg_num, src, dst);
+    $display("Data, address:%d, abl:%d, abh:%d, we:%d, di:%d, do:%d state:%d, regnum: %d, src:%d, dst:%d", ab, abl, abh, we, di, do, state, reg_num, src, dst);
     //ab we state reg_num, src, dst, 
     $display("Registers A:%d, X:%d, Y:%d", AXYS[0], AXYS[1], AXYS[2]);
     //$display("Hello2 di %d, %d", di, clk);
@@ -99,6 +118,7 @@ module _6502(di, do, clk, reset, we, ab);
     case(state)
        ABS1,
        ABSX1,
+       ABSX2,
        ZP0,
        RESET_0: begin 
                  pc_inc = 0;
@@ -112,6 +132,7 @@ module _6502(di, do, clk, reset, we, ab);
     case(state)
       ABS1: ab <= { di, temp_data };
       ABSX1: ab <= {di, temp_data};
+      ABSX2: ab <= {temp_data, abl};
       ZP0: ab <= {8'd0, di};
       default: ab <= pc;
     endcase
@@ -121,7 +142,7 @@ module _6502(di, do, clk, reset, we, ab);
   begin
   case(state)
     ZP0,
-    ABSX1,
+    ABSX2,
     ABS1: we <= store;
     default: we <= 0;
   endcase
@@ -216,7 +237,8 @@ module _6502(di, do, clk, reset, we, ab);
       ABS0: state <= ABS1;
       ABS1: state <= STORE_TO_MEM;
       ABSX0: state <= ABSX1;
-      ABSX1: state <= STORE_TO_MEM;//ABSX2
+      ABSX1: state <= (alu_carry_out | store) ? ABSX2 : STORE_TO_MEM;
+      ABSX2: state <= STORE_TO_MEM;
       //NB!! check absx2 scenario
       STORE_TO_MEM: state <= DECODE;
       ZP0: state <= ZP1;
