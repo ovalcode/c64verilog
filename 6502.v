@@ -22,7 +22,9 @@ module _6502(di, do, clk, reset, we, ab);
             STORE_TO_MEM = 8'd8,
             ABSX0 = 8'd9,
             ABSX1 = 8'd10,
-            ABSX2 = 8'd11;
+            ABSX2 = 8'd11,
+            ZPX0 = 8'd11,
+            ZPX1 = 8'd12;
             //RESET_1 = 8'd1;
 
 
@@ -79,7 +81,9 @@ module _6502(di, do, clk, reset, we, ab);
 
   always @*
     case(state)
+      ZPX0,
       ABSX0: alu_in_b = regfile;
+      
   //todo:change back to always block when additional conditions
       default: alu_in_b = 0;
     endcase
@@ -120,6 +124,7 @@ module _6502(di, do, clk, reset, we, ab);
        ABSX1,
        ABSX2,
        ZP0,
+       ZPX1,       
        RESET_0: begin 
                  pc_inc = 0;
                end
@@ -133,6 +138,7 @@ module _6502(di, do, clk, reset, we, ab);
       ABS1: ab <= { di, temp_data };
       ABSX1: ab <= {di, temp_data};
       ABSX2: ab <= {temp_data, abl};
+      ZPX1: ab <= {8'd0, temp_data};
       ZP0: ab <= {8'd0, di};
       default: ab <= pc;
     endcase
@@ -142,6 +148,7 @@ module _6502(di, do, clk, reset, we, ab);
   begin
   case(state)
     ZP0,
+    ZPX1,
     ABSX2,
     ABS1: we <= store;
     default: we <= 0;
@@ -170,13 +177,15 @@ module _6502(di, do, clk, reset, we, ab);
   always @(posedge clk)
   if (state == DECODE)
     casex(di) 
-      8'bxxx11001: index_y = 1;
+      8'bxxx100xx,
+      8'bxxx110xx: index_y = 1;
       default: index_y = 0;
     endcase
 
 
   always @*
   casex(state)
+      ZPX0,
       ABSX0: reg_num = index_y ? 2 : 1;
       DECODE: reg_num <= dst; 
       default: reg_num <= src;
@@ -231,6 +240,7 @@ module _6502(di, do, clk, reset, we, ab);
                 8'bxxx001xx: state <= ZP0; //Next state for zero page mode isntructions
                 8'bxxx11001: state <= ABSX0;
                 8'bxxx111xx: state <= ABSX0;
+                8'bxxx101xx: state <= ZPX0;
               endcase
       RESET_0: state <= RESET_1;
       RESET_1: state <= DECODE;
@@ -243,6 +253,8 @@ module _6502(di, do, clk, reset, we, ab);
       STORE_TO_MEM: state <= DECODE;
       ZP0: state <= ZP1;
       ZP1: state <= DECODE;
+      ZPX0: state <= ZPX1;
+      ZPX1: state <= STORE_TO_MEM;
       FETCH: state <= DECODE;
       //RESET_1: state <= RESET_2;
       //RESET_2: state <= RESET_3;
