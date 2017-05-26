@@ -23,8 +23,8 @@ module _6502(di, do, clk, reset, we, ab);
             ABSX0 = 8'd9,
             ABSX1 = 8'd10,
             ABSX2 = 8'd11,
-            ZPX0 = 8'd11,
-            ZPX1 = 8'd12;
+            ZPX0 = 8'd12,
+            ZPX1 = 8'd13;
             //RESET_1 = 8'd1;
 
 
@@ -124,6 +124,7 @@ module _6502(di, do, clk, reset, we, ab);
        ABSX1,
        ABSX2,
        ZP0,
+       ZPX0,      
        ZPX1,       
        RESET_0: begin 
                  pc_inc = 0;

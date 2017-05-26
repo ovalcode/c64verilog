@@ -87,7 +87,7 @@ module test;
 //--------------------------------------------------------------------------
 //Test Program 4: ABS,X with carry
 
-   ram[0] = 8'ha2;
+/*   ram[0] = 8'ha2;
    ram[1] = 8'h05;
    ram[2] = 8'ha0;
    ram[3] = 8'h0b;
@@ -97,14 +97,31 @@ module test;
    ram[7] = 8'h99;
    ram[8] = 8'hfe;
    ram[9] = 8'h05;
-   ram[16'h603] = 22;
+   ram[16'h603] = 22; */
 /*
-  LDX $5
-  LDY $B
+  LDX #$5
+  LDY #$B
   LDA $5FE,X
   STA $5FE,Y
 */
 //--------------------------------------------------------------------------
+//Test Program 5: ZP,X with rollover
+
+   ram[0] = 8'ha2;
+   ram[1] = 8'h23;
+   ram[2] = 8'hb5;
+   ram[3] = 8'h40;
+   ram[4] = 8'h95;
+   ram[5] = 8'he9;
+
+   ram [16'h63] = 8'h43;
+/*
+  LDX #$23
+  LDA $40,X -> location $63
+  STA $E9,X -> location c
+*/
+//--------------------------------------------------------------------------
+
 
      #10 reset = 1;
      #10 reset = 0;
@@ -158,7 +175,10 @@ module test;
 //$display("mem %d %d", ram[16'h50c], ram[16'h51b]);
 
 //Test program 4 debug
-$display("mem %d %d", ram[16'h603], ram[16'h609]);
+//$display("mem %d %d", ram[16'h603], ram[16'h609]);
+
+//Test program 5 debug
+$display("mem %d %d", ram[16'h63], ram[16'hc]);
 
   //always @(posedge clk)
   assign di = we ? 8'hzz : ram[ab]/*temp_ram_out*/ ;
