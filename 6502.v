@@ -24,7 +24,11 @@ module _6502(di, do, clk, reset, we, ab);
             ABSX1 = 8'd10,
             ABSX2 = 8'd11,
             ZPX0 = 8'd12,
-            ZPX1 = 8'd13;
+            ZPX1 = 8'd13,
+            INDX0 = 8'd14, 
+            INDX1 = 8'd15,
+            INDX2 = 8'd16,
+            INDX3 = 8'd17;
             //RESET_1 = 8'd1;
 
 
@@ -65,7 +69,10 @@ module _6502(di, do, clk, reset, we, ab);
   assign temp_alu_result = alu_in_a + alu_in_b + alu_carry_in;
   
   always @*
-      alu_in_a <= di;
+     case(state)
+       INDX1: alu_in_a <= temp_data;
+       default: alu_in_a <= di;
+     endcase
 
   always @*
   begin
@@ -76,12 +83,14 @@ module _6502(di, do, clk, reset, we, ab);
   always @*
       case(state)
         ABSX1: alu_carry_in <= alu_carry_out;
+        INDX1: alu_carry_in <= 1;
         default: alu_carry_in <= 0;
       endcase
 
   always @*
     case(state)
       ZPX0,
+      INDX0,
       ABSX0: alu_in_b = regfile;
       
   //todo:change back to always block when additional conditions
@@ -126,6 +135,10 @@ module _6502(di, do, clk, reset, we, ab);
        ZP0,
        ZPX0,      
        ZPX1,       
+       INDX0,
+       INDX1,
+       INDX2,
+       INDX3,
        RESET_0: begin 
                  pc_inc = 0;
                end
@@ -141,6 +154,9 @@ module _6502(di, do, clk, reset, we, ab);
       ABSX2: ab <= {temp_data, abl};
       ZPX1: ab <= {8'd0, temp_data};
       ZP0: ab <= {8'd0, di};
+      INDX1,
+      INDX2: ab <= {8'd0, temp_data};
+      INDX3: ab <= {di, temp_data};
       default: ab <= pc;
     endcase
 
@@ -151,6 +167,7 @@ module _6502(di, do, clk, reset, we, ab);
     ZP0,
     ZPX1,
     ABSX2,
+    INDX3,
     ABS1: we <= store;
     default: we <= 0;
   endcase
@@ -186,6 +203,7 @@ module _6502(di, do, clk, reset, we, ab);
 
   always @*
   casex(state)
+      INDX0,
       ZPX0,
       ABSX0: reg_num = index_y ? 2 : 1;
       DECODE: reg_num <= dst; 
@@ -241,6 +259,7 @@ module _6502(di, do, clk, reset, we, ab);
                 8'bxxx001xx: state <= ZP0; //Next state for zero page mode isntructions
                 8'bxxx11001: state <= ABSX0;
                 8'bxxx111xx: state <= ABSX0;
+                8'bxxx00001: state <= INDX0;
                 8'bxxx101xx: state <= ZPX0;
               endcase
       RESET_0: state <= RESET_1;
@@ -256,6 +275,10 @@ module _6502(di, do, clk, reset, we, ab);
       ZP1: state <= DECODE;
       ZPX0: state <= ZPX1;
       ZPX1: state <= STORE_TO_MEM;
+      INDX0: state <= INDX1;
+      INDX1: state <= INDX2;
+      INDX2: state <= INDX3;
+      INDX3: state <= STORE_TO_MEM;
       FETCH: state <= DECODE;
       //RESET_1: state <= RESET_2;
       //RESET_2: state <= RESET_3;
