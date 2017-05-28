@@ -28,7 +28,11 @@ module _6502(di, do, clk, reset, we, ab);
             INDX0 = 8'd14, 
             INDX1 = 8'd15,
             INDX2 = 8'd16,
-            INDX3 = 8'd17;
+            INDX3 = 8'd17,
+            INDY0 = 8'd18,
+            INDY1 = 8'd19,
+            INDY2 = 8'd20,
+            INDY3 = 8'd21;
             //RESET_1 = 8'd1;
 
 
@@ -82,7 +86,9 @@ module _6502(di, do, clk, reset, we, ab);
 
   always @*
       case(state)
+        INDY2,
         ABSX1: alu_carry_in <= alu_carry_out;
+        INDY0,
         INDX1: alu_carry_in <= 1;
         default: alu_carry_in <= 0;
       endcase
@@ -91,6 +97,7 @@ module _6502(di, do, clk, reset, we, ab);
     case(state)
       ZPX0,
       INDX0,
+      INDY1,
       ABSX0: alu_in_b = regfile;
       
   //todo:change back to always block when additional conditions
@@ -139,6 +146,10 @@ module _6502(di, do, clk, reset, we, ab);
        INDX1,
        INDX2,
        INDX3,
+       INDY0,
+       INDY1,
+       INDY2,
+       INDY3,
        RESET_0: begin 
                  pc_inc = 0;
                end
@@ -157,6 +168,10 @@ module _6502(di, do, clk, reset, we, ab);
       INDX1,
       INDX2: ab <= {8'd0, temp_data};
       INDX3: ab <= {di, temp_data};
+      INDY0: ab <= {8'd0, di};
+      INDY1: ab <= {8'd0, temp_data};
+      INDY2: ab <= {di, temp_data};
+      INDY3: ab <= {temp_data, abl};
       default: ab <= pc;
     endcase
 
@@ -168,6 +183,7 @@ module _6502(di, do, clk, reset, we, ab);
     ZPX1,
     ABSX2,
     INDX3,
+    INDY3,
     ABS1: we <= store;
     default: we <= 0;
   endcase
@@ -204,6 +220,7 @@ module _6502(di, do, clk, reset, we, ab);
   always @*
   casex(state)
       INDX0,
+      INDY1,
       ZPX0,
       ABSX0: reg_num = index_y ? 2 : 1;
       DECODE: reg_num <= dst; 
@@ -260,6 +277,7 @@ module _6502(di, do, clk, reset, we, ab);
                 8'bxxx11001: state <= ABSX0;
                 8'bxxx111xx: state <= ABSX0;
                 8'bxxx00001: state <= INDX0;
+                8'bxxx10001: state <= INDY0;
                 8'bxxx101xx: state <= ZPX0;
               endcase
       RESET_0: state <= RESET_1;
@@ -279,6 +297,9 @@ module _6502(di, do, clk, reset, we, ab);
       INDX1: state <= INDX2;
       INDX2: state <= INDX3;
       INDX3: state <= STORE_TO_MEM;
+      INDY0: state <= INDY1;
+      INDY1: state <= INDY2;
+      INDY2: state <= (alu_carry_out | store) ? INDY3 : STORE_TO_MEM;
       FETCH: state <= DECODE;
       //RESET_1: state <= RESET_2;
       //RESET_2: state <= RESET_3;
