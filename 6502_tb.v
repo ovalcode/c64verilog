@@ -143,6 +143,27 @@ module test;
   STA ($60,X)
 */
 //--------------------------------------------------------------------------
+//Test Program 7: (ZP),Y
+
+  ram[0] = 8'ha0;
+  ram[1] = 8'h33;
+  ram[2] = 8'hb1;
+  ram[3] = 8'h55;
+  ram[4] = 8'h91;
+  ram[5] = 8'h66;
+  ram[16'h55] = 8'hb5;
+  ram[16'h56] = 9;
+
+  ram[16'h66] = 8'he0;
+  ram[16'h67] = 8'ha0;
+
+  ram[16'h9e8] = 8'h67;
+/*
+  LDY #$33
+  LDA ($55),Y
+  STA ($66),Y
+*/
+//--------------------------------------------------------------------------
 
      #10 reset = 1;
      #10 reset = 0;
@@ -202,8 +223,10 @@ module test;
 //$display("mem %d %d", ram[16'h63], ram[16'hc]);
 
 //Test program 6 debug
-$display("mem %d %d", ram[16'h324], ram[16'h424]);
+//$display("mem %d %d", ram[16'h324], ram[16'h424]);
 
+//Test program 7 debug
+$display("mem %d %d", ram[16'h9e8], ram[16'ha113]);
 
   //always @(posedge clk)
   assign di = we ? 8'hzz : ram[ab]/*temp_ram_out*/ ;
