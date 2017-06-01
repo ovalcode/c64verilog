@@ -32,7 +32,8 @@ module _6502(di, do, clk, reset, we, ab);
             INDY0 = 8'd18,
             INDY1 = 8'd19,
             INDY2 = 8'd20,
-            INDY3 = 8'd21;
+            INDY3 = 8'd21,
+            REG = 8'd22;
             //RESET_1 = 8'd1;
 
 
@@ -45,6 +46,10 @@ module _6502(di, do, clk, reset, we, ab);
   wire [8:0] temp_alu_result;
   reg save_value_to_register;
 
+  reg C = 0;
+  reg clc;
+  reg sec;
+
   input [WIDTH-1 : 0] di;
   output reg [15:0] ab;
   reg [7:0] abl;
@@ -53,6 +58,7 @@ module _6502(di, do, clk, reset, we, ab);
   output we;
   reg [7:0] AXYS [3:0];
   reg load;
+  reg alu_in_a_only;
   reg store;
   output reg [7:0] do;
 
@@ -84,12 +90,28 @@ module _6502(di, do, clk, reset, we, ab);
     abh <= ab[15:8];
   end
 
+  always @(posedge clk)
+  if (state == DECODE)
+  begin
+    clc <= (di == 8'h18);
+    sec <= (di == 8'h38);
+  end
+
+  always @(posedge clk)
+  if (state == DECODE)
+  begin
+    if (clc) C <= 0;
+    if (sec) C <= 1;
+  end
+
   always @*
       case(state)
         INDY2,
         ABSX1: alu_carry_in <= alu_carry_out;
         INDY0,
         INDX1: alu_carry_in <= 1;
+        STORE_TO_MEM,
+        FETCH: alu_carry_in <= alu_in_a_only ? 0 : C;
         default: alu_carry_in <= 0;
       endcase
 
@@ -99,7 +121,8 @@ module _6502(di, do, clk, reset, we, ab);
       INDX0,
       INDY1,
       ABSX0: alu_in_b = regfile;
-      
+      FETCH,
+      STORE_TO_MEM: alu_in_b = alu_in_a_only ? 0 : regfile;
   //todo:change back to always block when additional conditions
       default: alu_in_b = 0;
     endcase
@@ -116,7 +139,7 @@ module _6502(di, do, clk, reset, we, ab);
     pc <= pc_temp + pc_inc;
     //ab <= pc;
     //$display("Hello pc %d, %d, %d, %d, %d, %d, %d, %d, %d, %d", pc, clk, ab, di, do, we, state, temp_data, reg_num, AXYS[0]);
-    $display("Data, address:%d, abl:%d, abh:%d, we:%d, di:%d, do:%d state:%d, regnum: %d, src:%d, dst:%d", ab, abl, abh, we, di, do, state, reg_num, src, dst);
+    $display("Data, address:%d, abl:%d, abh:%d, we:%d, di:%d, do:%d state:%d, regnum: %d, src:%d, dst:%d, pc_inc:%d", ab, abl, abh, we, di, do, state, reg_num, src, dst, pc_inc);
     //ab we state reg_num, src, dst, 
     $display("Registers A:%d, X:%d, Y:%d", AXYS[0], AXYS[1], AXYS[2]);
     //$display("Hello2 di %d, %d", di, clk);
@@ -150,7 +173,9 @@ module _6502(di, do, clk, reset, we, ab);
        INDY1,
        INDY2,
        INDY3,
-       RESET_0: begin 
+       RESET_0,
+       RESET_1,
+       REG: begin 
                  pc_inc = 0;
                end
        default: pc_inc = 1;
@@ -194,6 +219,18 @@ module _6502(di, do, clk, reset, we, ab);
   always @(posedge clk)
   if (state == DECODE)
     casex(di)
+      //NB!! This is load only. should actually for non-loadonly as well
+      //load_only used to block to ALU
+      8'b101xxxxx : alu_in_a_only <= 1; //LDA, LDX, LDY
+      default: alu_in_a_only <= 0;
+    endcase
+
+  always @(posedge clk)
+  if (state == DECODE)
+    casex(di)
+      //NB!! This is load only. should actually for non-loadonly as well
+      //load_only used to block to ALU
+      8'b011xxx01, //ADC
       8'b101xxxxx : load <= 1; //LDA, LDX, LDY
       default: load <= 0;
     endcase
@@ -272,6 +309,7 @@ module _6502(di, do, clk, reset, we, ab);
       DECODE: casex (di)
                 8'bxxx01001,
                 8'bxxx000x0: state <= FETCH;//Next state for immediate mode isntructions
+                8'b0xx11000: state <= REG;
                 8'bxxx011xx: state <= ABS0; //Next state for absolute mode isntructions
                 8'bxxx001xx: state <= ZP0; //Next state for zero page mode isntructions
                 8'bxxx11001: state <= ABSX0;
@@ -282,6 +320,7 @@ module _6502(di, do, clk, reset, we, ab);
               endcase
       RESET_0: state <= RESET_1;
       RESET_1: state <= DECODE;
+      REG: state <= DECODE;
       ABS0: state <= ABS1;
       ABS1: state <= STORE_TO_MEM;
       ABSX0: state <= ABSX1;
