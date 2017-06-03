@@ -174,7 +174,8 @@ module _6502(di, do, clk, reset, we, ab);
        INDY2,
        INDY3,
        RESET_0,
-       RESET_1,
+       /*FETCH,*/
+       /*RESET_1,*/       
        REG: begin 
                  pc_inc = 0;
                end
@@ -183,25 +184,26 @@ module _6502(di, do, clk, reset, we, ab);
     endcase
 
   //address generator
-  always @(posedge clk)
+  always @*
     case(state)
-      ABS1: ab <= { di, temp_data };
-      ABSX1: ab <= {di, temp_data};
-      ABSX2: ab <= {temp_data, abl};
-      ZPX1: ab <= {8'd0, temp_data};
-      ZP0: ab <= {8'd0, di};
+      ABS1: ab = { di, temp_data };
+      ABSX1: ab = {di, temp_data};
+      ABSX2: ab = {temp_data, abl};
+      ZPX1: ab = {8'd0, temp_data};
+      ZP0: ab = {8'd0, di};
       INDX1,
-      INDX2: ab <= {8'd0, temp_data};
-      INDX3: ab <= {di, temp_data};
-      INDY0: ab <= {8'd0, di};
-      INDY1: ab <= {8'd0, temp_data};
-      INDY2: ab <= {di, temp_data};
-      INDY3: ab <= {temp_data, abl};
-      default: ab <= pc;
+      INDX2: ab = {8'd0, temp_data};
+      INDX3: ab = {di, temp_data};
+      INDY0: ab = {8'd0, di};
+      INDY1: ab = {8'd0, temp_data};
+      INDY2: ab = {di, temp_data};
+      INDY3: ab = {temp_data, abl};
+      REG: ab = {abh, abl};
+      default: ab = pc;
     endcase
 
   //write enable generator
-  always @(posedge clk)
+  always @*
   begin
   case(state)
     ZP0,
@@ -209,8 +211,8 @@ module _6502(di, do, clk, reset, we, ab);
     ABSX2,
     INDX3,
     INDY3,
-    ABS1: we <= store;
-    default: we <= 0;
+    ABS1: we = store;
+    default: we = 0;
   endcase
   $display("ssss %d", we);
   end
@@ -293,8 +295,8 @@ module _6502(di, do, clk, reset, we, ab);
 //  if (load)
     AXYS[reg_num] <= temp_data;
 
-  always @(posedge clk)
-  if (store)
+  always @*
+  //if (store)
     do = regfile;
 
 

@@ -12,7 +12,7 @@ module test;
 
 //----------------------------------------------------------------
 //Test Program 1
-   /*ram[0] = 8'ha9;
+/*   ram[0] = 8'ha9;
      ram[1] = 8'd39;
      ram[2] = 8'h8d;
      ram[3] = 8'h11;
@@ -45,7 +45,7 @@ module test;
 
 //-----------------------------------------------------------------------
 //Test program 2
-     /*ram[0] = 8'hae;
+/*     ram[0] = 8'hae;
      ram[1] = 0;
      ram[2] = 4;
      ram[3] = 8'h8e;
@@ -97,7 +97,7 @@ module test;
    ram[7] = 8'h99;
    ram[8] = 8'hfe;
    ram[9] = 8'h05;
-   ram[16'h603] = 22;*/
+   ram[16'h603] = 22; */
 /*
   LDX #$5
   LDY #$B
@@ -208,19 +208,39 @@ module test;
   wire [15:0] ab;
   reg  [16:0] i;
   wire we;
-  reg [7:0] temp_ram_out;
+  //reg [7:0] temp_ram_out;
   //assign di = ram[ab];
 
   always @(posedge clk)
     $display("dddd %d", we);
 
 
-  always @(posedge clk)
+//to insert new mem here
+/*  always @(posedge clk)
   begin
   if (we)
     ram[ab] = do;
   $display("hhhh %d %d %d", we, do, ab);
-  end
+  end*/
+
+	reg [15:0] addr_reg;
+	
+	always @ (posedge clk)
+	begin
+	// Write
+        $display("ram internals, ab=%d, do=%d, we=%d, addr_reg=%d", ab, do, we, addr_reg);
+		if (we)
+			ram[ab] <= do;
+		
+		addr_reg <= ab;
+		
+	end
+		
+	// Continuous assignment implies read returns NEW data.
+	// This is the natural behavior of the TriMatrix memory
+	// blocks in Single Port mode.  
+	assign di = ram[addr_reg];
+
 
   //always @(posedge clk)
   //if (!we)
@@ -250,7 +270,7 @@ module test;
 $display("mem %d %d", ram[16'h9e8], ram[16'ha113]);
 
   //always @(posedge clk)
-  assign di = we ? 8'hzz : ram[ab]/*temp_ram_out*/ ;
+  //assign di = we ? 8'hzz : ram[ab]/*temp_ram_out*/ ;
 
   _6502 c1 (di, do, clk, reset, we, ab);
 
