@@ -43,8 +43,11 @@ module _6502(di, do, clk, reset, we, ab);
   reg [7:0] temp_data;
   reg [7:0] alu_in_a;
   reg [7:0] alu_in_b;
+
+  reg [7:0] temp_alu_in_a;
   wire [8:0] temp_alu_result;
   reg save_value_to_register;
+  reg subtract_operation;
 
   reg C = 0;
   reg clc;
@@ -76,7 +79,14 @@ module _6502(di, do, clk, reset, we, ab);
 
 //alu register stores as soon as inputs change
 //still need to have temp_data to sotre previous
-  assign temp_alu_result = alu_in_a + alu_in_b + alu_carry_in;
+  assign temp_alu_result = temp_alu_in_a + alu_in_b + alu_carry_in;
+
+  always @*
+     case(state)
+       FETCH,
+       STORE_TO_MEM: temp_alu_in_a = subtract_operation ? ~alu_in_a : alu_in_a; 
+       default: temp_alu_in_a = alu_in_a;
+     endcase
   
   always @*
      case(state)
@@ -139,7 +149,7 @@ module _6502(di, do, clk, reset, we, ab);
     pc <= pc_temp + pc_inc;
     //ab <= pc;
     //$display("Hello pc %d, %d, %d, %d, %d, %d, %d, %d, %d, %d", pc, clk, ab, di, do, we, state, temp_data, reg_num, AXYS[0]);
-    $display("Data, address:%d, abl:%d, abh:%d, we:%d, di:%d, do:%d state:%d, regnum: %d, src:%d, dst:%d, pc_inc:%d", ab, abl, abh, we, di, do, state, reg_num, src, dst, pc_inc);
+    $display("Data, address:%d, abl:%d, abh:%d, we:%d, di:%d, do:%d state:%d, regnum: %d, src:%d, dst:%d, pc_inc:%d, temp_alu_result:%d, temp_alu_in_a:%d, alu_in_b:%d, alu_carry_in:%d", ab, abl, abh, we, di, do, state, reg_num, src, dst, pc_inc, temp_alu_result, temp_alu_in_a, alu_in_b, alu_carry_in);
     //ab we state reg_num, src, dst, 
     $display("Registers A:%d, X:%d, Y:%d", AXYS[0], AXYS[1], AXYS[2]);
     //$display("Hello2 di %d, %d", di, clk);
@@ -233,6 +243,7 @@ module _6502(di, do, clk, reset, we, ab);
       //NB!! This is load only. should actually for non-loadonly as well
       //load_only used to block to ALU
       8'b011xxx01, //ADC
+      8'b111xxx01, //SBC
       8'b101xxxxx : load <= 1; //LDA, LDX, LDY
       default: load <= 0;
     endcase
@@ -245,6 +256,13 @@ module _6502(di, do, clk, reset, we, ab);
       default: store <= 0;
     endcase
 
+  //do sub
+  always @(posedge clk)
+  if (state == DECODE)
+    casex(di)
+      8'b111xxx01: subtract_operation <= 1;
+      default: subtract_operation <= 0;
+    endcase
   //todo: create lways block for indexy/x
 
   always @(posedge clk)
