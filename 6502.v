@@ -43,6 +43,7 @@ module _6502(di, do, clk, reset, we, ab);
   reg [7:0] temp_data;
   reg [7:0] alu_in_a;
   reg [7:0] alu_in_b;
+  reg inc;
 
   reg [7:0] temp_alu_in_a;
   wire [8:0] temp_alu_result;
@@ -114,6 +115,16 @@ module _6502(di, do, clk, reset, we, ab);
     if (sec) C <= 1;
   end
 
+  always @(posedge clk)
+  if (state == DECODE)
+    casex(di)
+      8'b11001000,   //INY
+      8'b11101000//INX
+                 : inc <= 1;
+
+      default: inc <= 0;
+    endcase
+
   always @*
       case(state)
         INDY2,
@@ -122,6 +133,7 @@ module _6502(di, do, clk, reset, we, ab);
         INDX1: alu_carry_in <= 1;
         STORE_TO_MEM,
         FETCH: alu_carry_in <= alu_in_a_only ? 0 : C;
+        REG: alu_carry_in <= inc;
         default: alu_carry_in <= 0;
       endcase
 
@@ -244,6 +256,10 @@ module _6502(di, do, clk, reset, we, ab);
       //load_only used to block to ALU
       8'b011xxx01, //ADC
       8'b111xxx01, //SBC
+      8'b11001010,   //DEX
+      8'b10001000,   //DEY
+      8'b11001000,   //INY
+      8'b10001000,   //DEY
       8'b101xxxxx : load <= 1; //LDA, LDX, LDY
       default: load <= 0;
     endcase
@@ -260,6 +276,8 @@ module _6502(di, do, clk, reset, we, ab);
   always @(posedge clk)
   if (state == DECODE)
     casex(di)
+      8'b11001010,   //DEX
+      8'b10001000,   //DEY
       8'b111xxx01: subtract_operation <= 1;
       default: subtract_operation <= 0;
     endcase
@@ -288,7 +306,11 @@ module _6502(di, do, clk, reset, we, ab);
   if (state == DECODE)
     casex(di)
       8'b100xxx01: src <= 0; //accumulator
+      8'b11101000,   //INX
+      8'b11001010,   //DEX
       8'b100xxx10: src <= 1; //X
+      8'b11001000,   //INY
+      8'b10001000,   //DEY
       8'b100xxx00: src <= 2; //Y
       default: src <= 0;
     endcase
@@ -297,7 +319,11 @@ module _6502(di, do, clk, reset, we, ab);
   if (state == DECODE)
     casex(di)
       8'b101xxx01: dst <= 0; //accumulator
+      8'b11101000,   //INX
+      8'b11001010,   //DEX
       8'b101xxx10: dst <= 1; //X
+      8'b11001000,   //INY
+      8'b10001000,   //DEY
       8'b101xxx00: dst <= 2; //Y
       default: dst <= 0;
     endcase
@@ -329,6 +355,10 @@ module _6502(di, do, clk, reset, we, ab);
       DECODE: casex (di)
                 8'bxxx01001,
                 8'bxxx000x0: state <= FETCH;//Next state for immediate mode isntructions
+                8'b11001000,   //INY
+                8'b11101000,   //INX
+                8'b10001000,   //DEY
+                8'b11001010,   //DEX
                 8'b0xx11000: state <= REG;
                 8'bxxx011xx: state <= ABS0; //Next state for absolute mode isntructions
                 8'bxxx001xx: state <= ZP0; //Next state for zero page mode isntructions

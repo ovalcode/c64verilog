@@ -179,6 +179,24 @@ module test;
   ram[11] = 8'h22; 
   ram[12] = 8'h38;
   ram[13] = 8'h38;
+  ram[14] = 8'ha2;
+  ram[15] = 8'h0;
+
+  ram[16] = 8'he8;
+  ram[17] = 8'he8;
+  ram[18] = 8'he8;
+  ram[19] = 8'he8;
+
+  ram[20] = 8'hca;
+  ram[21] = 8'hca;
+  ram[22] = 8'hca;
+  ram[23] = 8'hca;
+  ram[24] = 8'hca;
+  ram[25] = 8'hca;
+  ram[26] = 8'hca;
+  ram[27] = 8'hca;
+
+
   //ram[16'h1200] = 8'h47;
   ram[16'h1300] = 8'h69;
 /*
@@ -189,13 +207,26 @@ module test;
   ADC $1300
   SEC
   SBC #$22
+  LDX #$0
+  INX
+  INX
+  INX
+  INX
+  DEY
+  DEY
+  DEY
+  DEY
+  DEY
+  DEY
+  DEY
+  DEY
 */
 
 //--------------------------------------------------------------------------
 
      #10 reset = 1;
      #10 reset = 0;
-     #200 $stop;
+     #300 $stop;
 
      //# 17 reset = 1;
      //# 11 reset = 0;
