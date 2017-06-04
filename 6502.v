@@ -85,6 +85,7 @@ module _6502(di, do, clk, reset, we, ab);
   always @*
      case(state)
        FETCH,
+       REG,
        STORE_TO_MEM: temp_alu_in_a = subtract_operation ? ~alu_in_a : alu_in_a; 
        default: temp_alu_in_a = alu_in_a;
      endcase
@@ -92,6 +93,7 @@ module _6502(di, do, clk, reset, we, ab);
   always @*
      case(state)
        INDX1: alu_in_a <= temp_data;
+       REG: alu_in_a <= 0;
        default: alu_in_a <= di;
      endcase
 
@@ -142,6 +144,7 @@ module _6502(di, do, clk, reset, we, ab);
       ZPX0,
       INDX0,
       INDY1,
+      REG,
       ABSX0: alu_in_b = regfile;
       FETCH,
       STORE_TO_MEM: alu_in_b = alu_in_a_only ? 0 : regfile;
@@ -161,7 +164,7 @@ module _6502(di, do, clk, reset, we, ab);
     pc <= pc_temp + pc_inc;
     //ab <= pc;
     //$display("Hello pc %d, %d, %d, %d, %d, %d, %d, %d, %d, %d", pc, clk, ab, di, do, we, state, temp_data, reg_num, AXYS[0]);
-    $display("Data, address:%d, abl:%d, abh:%d, we:%d, di:%d, do:%d state:%d, regnum: %d, src:%d, dst:%d, pc_inc:%d, temp_alu_result:%d, temp_alu_in_a:%d, alu_in_b:%d, alu_carry_in:%d", ab, abl, abh, we, di, do, state, reg_num, src, dst, pc_inc, temp_alu_result, temp_alu_in_a, alu_in_b, alu_carry_in);
+    $display("Data, address:%d, abl:%d, abh:%d, we:%d, di:%d, do:%d state:%d, regnum: %d, src:%d, dst:%d, pc_inc:%d, temp_alu_result:%d, temp_alu_in_a:%d, alu_in_a:%d, alu_in_b:%d, alu_carry_in:%d, save_value_to_register:%d, load:%d", ab, abl, abh, we, di, do, state, reg_num, src, dst, pc_inc, temp_alu_result, temp_alu_in_a, alu_in_a, alu_in_b, alu_carry_in, save_value_to_register, load);
     //ab we state reg_num, src, dst, 
     $display("Registers A:%d, X:%d, Y:%d", AXYS[0], AXYS[1], AXYS[2]);
     //$display("Hello2 di %d, %d", di, clk);
@@ -259,7 +262,7 @@ module _6502(di, do, clk, reset, we, ab);
       8'b11001010,   //DEX
       8'b10001000,   //DEY
       8'b11001000,   //INY
-      8'b10001000,   //DEY
+      8'b11101000,   //INX
       8'b101xxxxx : load <= 1; //LDA, LDX, LDY
       default: load <= 0;
     endcase

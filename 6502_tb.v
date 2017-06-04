@@ -226,7 +226,7 @@ module test;
 
      #10 reset = 1;
      #10 reset = 0;
-     #300 $stop;
+     #600 $stop;
 
      //# 17 reset = 1;
      //# 11 reset = 0;
