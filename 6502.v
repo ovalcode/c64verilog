@@ -17,7 +17,7 @@ module _6502(di, do, clk, reset, we, ab);
             ABS0 = 8'd3,
             ABS1 = 8'd4,
             ZP0 = 8'd5,
-            ZP1 = 8'd6,
+//            ZP1 = 8'd6,
             FETCH = 8'd7,
             STORE_TO_MEM = 8'd8,
             ABSX0 = 8'd9,
@@ -33,7 +33,9 @@ module _6502(di, do, clk, reset, we, ab);
             INDY1 = 8'd19,
             INDY2 = 8'd20,
             INDY3 = 8'd21,
-            REG = 8'd22;
+            REG = 8'd22,
+            MEM_MODIFY_0 = 8'd23,
+            MEM_MODIFY_1 = 8'd24;
             //RESET_1 = 8'd1;
 
 
@@ -49,6 +51,7 @@ module _6502(di, do, clk, reset, we, ab);
   wire [8:0] temp_alu_result;
   reg save_value_to_register;
   reg subtract_operation;
+  reg read_and_modify;
 
   reg C = 0;
   reg clc;
@@ -93,6 +96,7 @@ module _6502(di, do, clk, reset, we, ab);
   always @*
      case(state)
        INDX1: alu_in_a <= temp_data;
+       MEM_MODIFY_0,
        REG: alu_in_a <= 0;
        default: alu_in_a <= di;
      endcase
@@ -120,6 +124,7 @@ module _6502(di, do, clk, reset, we, ab);
   always @(posedge clk)
   if (state == DECODE)
     casex(di)
+      8'b111xx110, //INC
       8'b11001000,   //INY
       8'b11101000//INX
                  : inc <= 1;
@@ -135,6 +140,7 @@ module _6502(di, do, clk, reset, we, ab);
         INDX1: alu_carry_in <= 1;
         STORE_TO_MEM,
         FETCH: alu_carry_in <= alu_in_a_only ? 0 : C;
+        MEM_MODIFY_0,
         REG: alu_carry_in <= inc;
         default: alu_carry_in <= 0;
       endcase
@@ -146,6 +152,7 @@ module _6502(di, do, clk, reset, we, ab);
       INDY1,
       REG,
       ABSX0: alu_in_b = regfile;
+      MEM_MODIFY_0: alu_in_b = di;
       FETCH,
       STORE_TO_MEM: alu_in_b = alu_in_a_only ? 0 : regfile;
   //todo:change back to always block when additional conditions
@@ -199,6 +206,8 @@ module _6502(di, do, clk, reset, we, ab);
        INDY2,
        INDY3,
        RESET_0,
+       MEM_MODIFY_0,
+       MEM_MODIFY_1,
        /*FETCH,*/
        /*RESET_1,*/       
        REG: begin 
@@ -223,6 +232,8 @@ module _6502(di, do, clk, reset, we, ab);
       INDY1: ab = {8'd0, temp_data};
       INDY2: ab = {di, temp_data};
       INDY3: ab = {temp_data, abl};
+      MEM_MODIFY_0,
+      MEM_MODIFY_1,
       REG: ab = {abh, abl};
       default: ab = pc;
     endcase
@@ -237,6 +248,7 @@ module _6502(di, do, clk, reset, we, ab);
     INDX3,
     INDY3,
     ABS1: we = store;
+    MEM_MODIFY_1: we = 1;
     default: we = 0;
   endcase
   $display("ssss %d", we);
@@ -285,6 +297,13 @@ module _6502(di, do, clk, reset, we, ab);
       default: subtract_operation <= 0;
     endcase
   //todo: create lways block for indexy/x
+
+  always @(posedge clk)
+  if (state == DECODE)
+    casex(di)
+      8'b1110110: read_and_modify <= 1; //INC
+      default: read_and_modify <= 0;
+    endcase
 
   always @(posedge clk)
   if (state == DECODE)
@@ -375,16 +394,18 @@ module _6502(di, do, clk, reset, we, ab);
       RESET_1: state <= DECODE;
       REG: state <= DECODE;
       ABS0: state <= ABS1;
-      ABS1: state <= STORE_TO_MEM;
+      ABS1: state <= read_and_modify ? MEM_MODIFY_0 : STORE_TO_MEM;
       ABSX0: state <= ABSX1;
-      ABSX1: state <= (alu_carry_out | store) ? ABSX2 : STORE_TO_MEM;
-      ABSX2: state <= STORE_TO_MEM;
+      ABSX1: state <= (alu_carry_out | store | read_and_modify) ? ABSX2 : STORE_TO_MEM;
+      ABSX2: state <= read_and_modify ? MEM_MODIFY_0 : STORE_TO_MEM;
       //NB!! check absx2 scenario
       STORE_TO_MEM: state <= DECODE;
-      ZP0: state <= ZP1;
-      ZP1: state <= DECODE;
+      ZP0: state <= read_and_modify ? MEM_MODIFY_0 : FETCH;
+      MEM_MODIFY_0: state <= MEM_MODIFY_1;
+      MEM_MODIFY_1: state <= FETCH;
+//      ZP1: state <= DECODE;
       ZPX0: state <= ZPX1;
-      ZPX1: state <= STORE_TO_MEM;
+      ZPX1: state <= read_and_modify ? MEM_MODIFY_0 : STORE_TO_MEM;
       INDX0: state <= INDX1;
       INDX1: state <= INDX2;
       INDX2: state <= INDX3;
