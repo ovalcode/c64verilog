@@ -171,7 +171,7 @@ module _6502(di, do, clk, reset, we, ab);
     pc <= pc_temp + pc_inc;
     //ab <= pc;
     //$display("Hello pc %d, %d, %d, %d, %d, %d, %d, %d, %d, %d", pc, clk, ab, di, do, we, state, temp_data, reg_num, AXYS[0]);
-    $display("Data, address:%d, abl:%d, abh:%d, we:%d, di:%d, do:%d state:%d, regnum: %d, src:%d, dst:%d, pc_inc:%d, temp_alu_result:%d, temp_alu_in_a:%d, alu_in_a:%d, alu_in_b:%d, alu_carry_in:%d, save_value_to_register:%d, load:%d", ab, abl, abh, we, di, do, state, reg_num, src, dst, pc_inc, temp_alu_result, temp_alu_in_a, alu_in_a, alu_in_b, alu_carry_in, save_value_to_register, load);
+    $display("Data, address:%d, abl:%d, abh:%d, we:%d, di:%d, do:%d state:%d, regnum: %d, src:%d, dst:%d, pc_inc:%d, temp_alu_result:%d, temp_data:%d, temp_alu_in_a:%d, alu_in_a:%d, alu_in_b:%d, alu_carry_in:%d, save_value_to_register:%d, load:%d", ab, abl, abh, we, di, do, state, reg_num, src, dst, pc_inc, temp_alu_result, temp_data, temp_alu_in_a, alu_in_a, alu_in_b, alu_carry_in, save_value_to_register, load);
     //ab we state reg_num, src, dst, 
     $display("Registers A:%d, X:%d, Y:%d", AXYS[0], AXYS[1], AXYS[2]);
     //$display("Hello2 di %d, %d", di, clk);
@@ -301,7 +301,7 @@ module _6502(di, do, clk, reset, we, ab);
   always @(posedge clk)
   if (state == DECODE)
     casex(di)
-      8'b1110110: read_and_modify <= 1; //INC
+      8'b11100110: read_and_modify <= 1; //INC
       default: read_and_modify <= 0;
     endcase
 
@@ -363,8 +363,10 @@ module _6502(di, do, clk, reset, we, ab);
 
   always @*
   //if (store)
-    do = regfile;
-
+    case (state)
+      MEM_MODIFY_1: do = temp_data;
+      default: do = regfile;
+    endcase
 
   //state machine
   always @(posedge clk or posedge reset)

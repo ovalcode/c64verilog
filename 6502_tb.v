@@ -196,6 +196,19 @@ module test;
   ram[26] = 8'hca;
   ram[27] = 8'hca;
 
+  ram[28] = 8'he6;
+  ram[29] = 8'h55;
+  ram[30] = 8'he6;
+  ram[31] = 8'h55;
+  ram[32] = 8'he6;
+  ram[33] = 8'h55;
+  ram[34] = 8'he6;
+  ram[35] = 8'h55;
+  ram[36] = 8'he6;
+  ram[37] = 8'h55;
+
+
+
 
   //ram[16'h1200] = 8'h47;
   ram[16'h1300] = 8'h69;
@@ -229,7 +242,7 @@ module test;
 
      #10 reset = 1;
      #10 reset = 0;
-     #600 $stop;
+     #800 $stop;
 
      //# 17 reset = 1;
      //# 11 reset = 0;
@@ -308,7 +321,10 @@ module test;
 //$display("mem %d %d", ram[16'h324], ram[16'h424]);
 
 //Test program 7 debug
-$display("mem %d %d", ram[16'h9e8], ram[16'ha113]);
+//$display("mem %d %d", ram[16'h9e8], ram[16'ha113]);
+
+//Test program 8 debug
+$display("mem %d %d", ram[16'h55], ram[16'ha113]);
 
   //always @(posedge clk)
   //assign di = we ? 8'hzz : ram[ab]/*temp_ram_out*/ ;
