@@ -88,6 +88,7 @@ module _6502(di, do, clk, reset, we, ab);
   always @*
      case(state)
        FETCH,
+       MEM_MODIFY_0,
        REG,
        STORE_TO_MEM: temp_alu_in_a = subtract_operation ? ~alu_in_a : alu_in_a; 
        default: temp_alu_in_a = alu_in_a;
@@ -293,6 +294,7 @@ module _6502(di, do, clk, reset, we, ab);
     casex(di)
       8'b11001010,   //DEX
       8'b10001000,   //DEY
+      8'b110xxx10,
       8'b111xxx01: subtract_operation <= 1;
       default: subtract_operation <= 0;
     endcase
@@ -301,7 +303,7 @@ module _6502(di, do, clk, reset, we, ab);
   always @(posedge clk)
   if (state == DECODE)
     casex(di)
-      8'b11100110: read_and_modify <= 1; //INC
+      8'b11xxxx10: read_and_modify <= 1; //INC, DEC
       default: read_and_modify <= 0;
     endcase
 
