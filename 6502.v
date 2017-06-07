@@ -46,6 +46,7 @@ module _6502(di, do, clk, reset, we, ab);
   reg [7:0] alu_in_a;
   reg [7:0] alu_in_b;
   reg inc;
+  reg compare;
 
   reg [7:0] temp_alu_in_a;
   wire [8:0] temp_alu_result;
@@ -102,6 +103,14 @@ module _6502(di, do, clk, reset, we, ab);
        default: alu_in_a <= di;
      endcase
 
+  always @(posedge clk)
+    if (state == DECODE)
+    casex(di) 
+      8'b110xxx01,
+      8'b11xxxx00: compare <= 1;
+      default: compare <= 0;
+    endcase
+
   always @*
   begin
     abl <= ab[7:0];
@@ -140,7 +149,7 @@ module _6502(di, do, clk, reset, we, ab);
         INDY0,
         INDX1: alu_carry_in <= 1;
         STORE_TO_MEM,
-        FETCH: alu_carry_in <= alu_in_a_only ? 0 : C;
+        FETCH: alu_carry_in <= alu_in_a_only ? 0 : compare ? 1 : C;
         MEM_MODIFY_0,
         REG: alu_carry_in <= inc;
         default: alu_carry_in <= 0;
@@ -294,7 +303,9 @@ module _6502(di, do, clk, reset, we, ab);
     casex(di)
       8'b11001010,   //DEX
       8'b10001000,   //DEY
-      8'b110xxx10,
+      8'b110xxx10,  
+      8'b110xxx01,   //CMP
+      8'b11x0xx00,   //CPX, CPY
       8'b111xxx01: subtract_operation <= 1;
       default: subtract_operation <= 0;
     endcase
@@ -332,9 +343,11 @@ module _6502(di, do, clk, reset, we, ab);
       8'b100xxx01: src <= 0; //accumulator
       8'b11101000,   //INX
       8'b11001010,   //DEX
+      8'b111xxx00,   //CPX
       8'b100xxx10: src <= 1; //X
       8'b11001000,   //INY
       8'b10001000,   //DEY
+      8'b110xxx00,   //CPY
       8'b100xxx00: src <= 2; //Y
       default: src <= 0;
     endcase
