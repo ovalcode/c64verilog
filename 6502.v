@@ -47,6 +47,7 @@ module _6502(di, do, clk, reset, we, ab);
   reg [7:0] alu_in_b;
   reg inc;
   reg compare;
+  reg add_sbc;
 
   reg [7:0] temp_alu_in_a;
   wire [8:0] temp_alu_result;
@@ -111,6 +112,15 @@ module _6502(di, do, clk, reset, we, ab);
       default: compare <= 0;
     endcase
 
+  always @(posedge clk)
+    if (state == DECODE)
+    casex(di) 
+      8'b011xxx01,
+      8'b111xxx01: add_sbc <= 1;
+      default: add_sbc <= 0;
+    endcase
+
+
   always @*
   begin
     abl <= ab[7:0];
@@ -127,8 +137,12 @@ module _6502(di, do, clk, reset, we, ab);
   always @(posedge clk)
   if (state == DECODE)
   begin
-    if (clc) C <= 0;
-    if (sec) C <= 1;
+    if (compare | add_sbc)
+      C <= alu_carry_out;
+    else begin
+      if (clc) C <= 0;
+      if (sec) C <= 1;
+    end
   end
 
   always @(posedge clk)
