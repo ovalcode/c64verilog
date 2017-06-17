@@ -91,9 +91,9 @@ always @*
 if (state == 1)
 begin
   init_counter <= 1;
-  in_data <= 32'h90000000;
+  in_data <= 32'h90000001;
 end else
-  init_counter <= 1;
+  init_counter <= 0;
 
 //always @(posedge clk)
 //  init_counter <= (state == 1) ? 1 : 0; 
