@@ -40,7 +40,7 @@ shift_in_out //in=1, out =0
     output reg out_bit = 0;
     output [31:0] out_data;
     output shifting_finished;
-    reg [32:0] ring_counter;
+    reg [32:0] ring_counter = 0;
     reg [31:0] shift_data;
     
     assign out_data = shift_data;
@@ -49,7 +49,7 @@ shift_in_out //in=1, out =0
     begin
       if (!shift_in_out)      
         shift_data <= in_data;
-      ring_counter <= 1;
+      //ring_counter <= 32'h1;
     end   
     
     always @(negedge shift_clk)    
@@ -67,8 +67,10 @@ shift_in_out //in=1, out =0
         shift_data <= {shift_data[6:0], in_bit};
       //shift_data <= shift_data << 1;
 
-    always @(posedge shift_clk)
-    if (init_counter == 0)
+    always @(posedge shift_clk or posedge init_counter)
+    if (init_counter == 1)
+      ring_counter <= 32'h1;
+    else
       ring_counter <= ring_counter << 1;
     
    
