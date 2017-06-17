@@ -68,9 +68,10 @@ shift_in_out //in=1, out =0
       //shift_data <= shift_data << 1;
 
     always @(posedge shift_clk)
+    if (init_counter == 0)
       ring_counter <= ring_counter << 1;
     
    
-    assign shifting_finished = shift_in_out ? ring_counter[32] :ring_counter[32]; 
+    assign shifting_finished = shift_in_out ? ring_counter[8] :ring_counter[32]; 
     
 endmodule

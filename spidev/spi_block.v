@@ -24,6 +24,7 @@ module spi_block(
  clk,
  out_bit,
  in_bit,
+ data_out,
  chip_select,
  data_clk,
  reset
@@ -32,18 +33,19 @@ module spi_block(
 input clk;
 input reset;
 output out_bit;
+output [7:0] data_out;
 //input wire in_bit;
 wire shift_out_clk;
 wire shift_in_clk;
 output wire data_clk;
 input wire in_bit;
-reg [31:0] in_data;
+(*KEEP = "TRUE"*) reg [31:0] in_data;
 reg load_shift_register;
 wire shifting_finished;
 wire read_shifting_finished;
 wire out_bit;
 wire [31:0] shift_out_wire;
-reg [3:0] state = 0;
+reg [1:0] state = 0;
 reg init_counter = 0;
 reg enable_shifting = 0;
 output reg chip_select = 1;
@@ -52,6 +54,7 @@ wire gnd_wire;
 wire floating_wire;
 reg [7:0] shifted_data;
 
+assign data_out = shifted_data;
 assign vcc_wire = 1;
 assign gnd_wire = 0;
 //NB!!!
@@ -67,6 +70,8 @@ always @(posedge clk)
     0: state <= 1;
     1: state <= 2; // status 2 = start shifting;
     2: state <= shifting_finished ? 3 : 2;
+    3: state <= 3;
+    default: state <= state;
   endcase
   
 //?????
@@ -87,10 +92,11 @@ if (state == 1)
 begin
   init_counter <= 1;
   in_data <= 32'h90000000;
-end
+end else
+  init_counter <= 1;
 
-always @(posedge clk)
-  init_counter <= (state == 1) ? 1 : 0; 
+//always @(posedge clk)
+//  init_counter <= (state == 1) ? 1 : 0; 
 
 shift_reg send_reg (
   shift_out_clk,
