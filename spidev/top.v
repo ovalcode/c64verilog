@@ -26,7 +26,8 @@ module top(
   output spi_hold,
   output spi_wp,
   output spi_si,
-  input spi_so
+  input spi_so,
+  output [7:0] led
     );
 
 //reg clk = 0;
@@ -34,6 +35,8 @@ wire clk_out;
 wire wire_gnd = 0;
 wire wire_vcc = 1;
 wire clk_locked;
+wire [31:0] data_out;
+
 //wire out_bit;
 //wire in_bit;
 //wire chip_select;
@@ -44,6 +47,7 @@ assign spi_wp = 1;
 //reg reset = 1;
 assign reset = ~clk_locked;
 
+assign led [7:0] = {data_out[7:0]};
 /*initial begin
   #1003000 reset = 0;
 end*/
@@ -63,6 +67,7 @@ spi_block spi_com(
   clk_out, //use clock from clock-gen
   spi_si,
   spi_so,
+  data_out,
   chip_select,
   data_clk,
   reset
@@ -87,24 +92,32 @@ spi_block spi_com(
    //            Artix-7
    // Xilinx HDL Language Template, version 2017.1
 
+wire CFGCLK_open;
+wire CFGMCLK_open;
+wire EOS_open;
+wire PREQ_open;
+wire CLK_open;
+wire USRDONEO_open;
+wire USRDONETS_open;
+
    STARTUPE2 #(
       .PROG_USR("FALSE"),  // Activate program event security feature. Requires encrypted bitstreams.
       .SIM_CCLK_FREQ(0.0)  // Set the Configuration Clock Frequency(ns) for simulation.
    )
    STARTUPE2_inst (
-      .CFGCLK(CFGCLK),       // 1-bit output: Configuration main clock output
-      .CFGMCLK(CFGMCLK),     // 1-bit output: Configuration internal oscillator clock output
-      .EOS(EOS),             // 1-bit output: Active high output signal indicating the End Of Startup.
-      .PREQ(PREQ),           // 1-bit output: PROGRAM request to fabric output
-      .CLK(CLK),             // 1-bit input: User start-up clock input
-      .GSR(GSR),             // 1-bit input: Global Set/Reset input (GSR cannot be used for the port name)
-      .GTS(GTS),             // 1-bit input: Global 3-state input (GTS cannot be used for the port name)
-      .KEYCLEARB(KEYCLEARB), // 1-bit input: Clear AES Decrypter Key input from Battery-Backed RAM (BBRAM)
-      .PACK(PACK),           // 1-bit input: PROGRAM acknowledge input
-      .USRCCLKO(USRCCLKO),   // 1-bit input: User CCLK input
-      .USRCCLKTS(USRCCLKTS), // 1-bit input: User CCLK 3-state enable input
-      .USRDONEO(USRDONEO),   // 1-bit input: User DONE pin output control
-      .USRDONETS(USRDONETS)  // 1-bit input: User DONE 3-state enable output
+      .CFGCLK(CFGCLK_open),       // 1-bit output: Configuration main clock output
+      .CFGMCLK(CFGMCLK_open),     // 1-bit output: Configuration internal oscillator clock output
+      .EOS(EOS_open),             // 1-bit output: Active high output signal indicating the End Of Startup.
+      .PREQ(PREQ_open),           // 1-bit output: PROGRAM request to fabric output
+      .CLK(CLK_open),             // 1-bit input: User start-up clock input
+      .GSR(wire_gnd),             // 1-bit input: Global Set/Reset input (GSR cannot be used for the port name)
+      .GTS(wire_gnd),             // 1-bit input: Global 3-state input (GTS cannot be used for the port name)
+      .KEYCLEARB(wire_gnd), // 1-bit input: Clear AES Decrypter Key input from Battery-Backed RAM (BBRAM)
+      .PACK(wire_gnd),           // 1-bit input: PROGRAM acknowledge input
+      .USRCCLKO(data_clk),   // 1-bit input: User CCLK input
+      .USRCCLKTS(wire_gnd), // 1-bit input: User CCLK 3-state enable input
+      .USRDONEO(USRDONEO_open),   // 1-bit input: User DONE pin output control
+      .USRDONETS(USRDONETS_open)  // 1-bit input: User DONE 3-state enable output
    );
 
    // End of STARTUPE2_inst instantiation
