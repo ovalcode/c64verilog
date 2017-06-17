@@ -70,13 +70,14 @@ wire chip_select;
 wire data_clk;
 wire vcc_wire;
 wire out;
+wire [7:0] data_out_sim;
 
 assign vcc_wire = 1;
 
      s25fl032p mod_0
      (
          data_clk,
-         out_bit,
+         out_bit,         
          chip_select,
          vcc_wire,
          vcc_wire,
@@ -91,13 +92,14 @@ assign vcc_wire = 1;
     );*/
 
      initial begin
-     #1000000 reset = 0;
+     #1000000 reset <= 0;
      end
      
 spi_block my_spi (
       clk,
       out_bit,
       out,
+      data_out_sim,
       chip_select,
       data_clk,
       reset
