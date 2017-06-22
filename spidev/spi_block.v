@@ -39,7 +39,7 @@ wire shift_out_clk;
 wire shift_in_clk;
 output wire data_clk;
 input wire in_bit;
-(*KEEP = "TRUE"*) reg [31:0] in_data;
+(*DONT_TOUCH = "TRUE"*) reg [31:0] in_data;
 reg load_shift_register;
 wire shifting_finished;
 wire read_shifting_finished;
@@ -91,36 +91,30 @@ always @*
 if (state == 1)
 begin
   init_counter <= 1;
-  in_data <= 32'h90000001;
+  in_data <= 32'h9000_0001;
 end else
   init_counter <= 0;
 
 //always @(posedge clk)
 //  init_counter <= (state == 1) ? 1 : 0; 
 
-shift_reg send_reg (
+shift_out_reg send_reg (
   shift_out_clk,
-  floating_wire,
   in_data,
-  floating_wire,
   init_counter,
   shifting_finished,
-  out_bit,
-  gnd_wire
+  out_bit  
     );
 
 always @(posedge read_shifting_finished)
   shifted_data <= {shift_out_wire[7:0]}; 
 
-shift_reg recive_reg (
+shift_in_reg recive_reg (
   shift_in_clk,//??????????
   in_bit,
-  floating_wire,
   shift_out_wire,// out data??????
   init_counter,
-  read_shifting_finished,
-  floating_wire,//out_bit,
-  vcc_wire
+  read_shifting_finished
     );
 
 /*

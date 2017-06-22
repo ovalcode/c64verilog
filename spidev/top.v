@@ -36,7 +36,40 @@ wire wire_gnd = 0;
 wire wire_vcc = 1;
 wire clk_locked;
 wire [31:0] data_out;
+//840,000,000
 
+/*
+1 
+2
+4
+8
+16
+32
+64
+128
+256
+512
+1024
+2048
+4096
+8192
+18384
+32768
+65536
+131072
+262144
+524288
+1048576
+2097152
+4194304
+8388608
+16777216
+33554432
+67108864
+134217728
+268435456
+536870912
+*/
 //wire out_bit;
 //wire in_bit;
 //wire chip_select;
@@ -45,12 +78,30 @@ wire reset;
 assign spi_hold = 1;
 assign spi_wp = 1;
 //reg reset = 1;
-assign reset = ~clk_locked;
+//assign reset = ~clk_locked;
+
+reg [31:0] dd = 0;
+//reg reachedthres = 0;
+assign reset = ~dd[30];
+always @(posedge clk_out)
+  dd <= dd + 1;
+  
+//always @(posedge clk_out)
+//  reachedthres <= dd > 100000000;
 
 assign led [7:0] = {data_out[7:0]};
 /*initial begin
   #1003000 reset = 0;
 end*/
+
+ila_0  debugger(
+  clk,
+  clk_out,
+  spi_si,  
+  chip_select,
+  data_clk
+);
+
 
 clk_wiz_0 clkfeed
  (
