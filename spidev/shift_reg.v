@@ -35,13 +35,13 @@ shift_in_out //in=1, out =0
     input init_counter;
     input in_bit;
     input shift_in_out;
-    input [31:0] in_data;
+    (*DONT_TOUCH = "TRUE"*) input [31:0] in_data;
     //input load_shift_register;
     output reg out_bit = 0;
     output [31:0] out_data;
     output shifting_finished;
     reg [32:0] ring_counter = 0;
-    reg [31:0] shift_data;
+    (*DONT_TOUCH = "TRUE"*) reg [31:0] shift_data;
     
     assign out_data = shift_data;
     

@@ -83,7 +83,7 @@ always @(posedge clk)
 
 //assign data_clock = data_clock_enabled ? clk : 0;
   
-always @(state)
+always @(negedge clk)
   chip_select <= (state > 0) ? 0 : 1;
 
 always @*
