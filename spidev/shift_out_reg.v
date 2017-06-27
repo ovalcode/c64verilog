@@ -23,43 +23,28 @@
 module shift_out_reg(
 shift_clk,
 in_data,
-init_counter,
-shifting_finished,
+load,
 out_bit
     );
     
     input shift_clk;
-    input init_counter;
-    input [31:0] in_data;
+    input load;
+    input [31:0] in_data = 0;
     //input load_shift_register;
-    output reg out_bit = 0;
-    output shifting_finished;
+    //output reg out_bit = 0;
+    output out_bit;
     reg [32:0] ring_counter = 0;
 //???????????    
 (*DONT_TOUCH = "TRUE"*) reg [31:0] shift_data;
     
-    always @(posedge init_counter)
+    assign out_bit = shift_data[31];
+    
+    always @(negedge shift_clk)
     begin
-        shift_data <= in_data;
-      //ring_counter <= 32'h1;
-    end   
-    
-    always @(negedge shift_clk)    
-      shift_data <= shift_data << 1;
-    
-    
-    always @(posedge shift_clk)
-        out_bit <= shift_data[31];
-      //shift_data <= shift_data << 1;
-
-
-    always @(posedge shift_clk or posedge init_counter)
-    if (init_counter == 1)
-      ring_counter <= 33'h1;
-    else
-      ring_counter <= ring_counter << 1;
-    
-   
-    assign shifting_finished = ring_counter[32]; 
+       if (load == 1)
+          shift_data <= in_data;
+       else 
+          shift_data <= {shift_data[30:0],1'b0};
+    end
     
 endmodule

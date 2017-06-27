@@ -35,7 +35,7 @@ wire clk_out;
 wire wire_gnd = 0;
 wire wire_vcc = 1;
 wire clk_locked;
-wire [31:0] data_out;
+wire [7:0] data_out;
 //840,000,000
 
 /*

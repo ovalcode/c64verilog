@@ -39,44 +39,43 @@ wire shift_out_clk;
 wire shift_in_clk;
 output wire data_clk;
 input wire in_bit;
-(*DONT_TOUCH = "TRUE"*) reg [31:0] in_data;
 reg load_shift_register;
 wire shifting_finished;
 wire read_shifting_finished;
 wire out_bit;
-wire [31:0] shift_out_wire;
-reg [1:0] state = 0;
+wire [7:0] shift_out_wire;
+reg [2:0] state = 0;
 reg init_counter = 0;
-reg enable_shifting = 0;
 output reg chip_select = 1;
 wire vcc_wire;
 wire gnd_wire;
 wire floating_wire;
 reg [7:0] shifted_data;
+reg [31:0] in_data = 32'h9000_0001;
+reg [4:0] remaining_send;
+reg [2:0] remaining_receive;
 
 assign data_out = shifted_data;
 assign vcc_wire = 1;
 assign gnd_wire = 0;
 //NB!!!
-assign shift_out_clk = chip_select ? 0 : ~data_clk;
+//assign shift_out_clk = chip_select ? 0 : ~data_clk;
 
 assign shift_in_clk = (state == 3) ? data_clk : 1;
 
-assign data_clk = enable_shifting ? clk : 0;
+assign data_clk = chip_select ? 0 : clk;
 
 always @(posedge clk)
   if (!reset)
   case(state)
     0: state <= 1;
     1: state <= 2; // status 2 = start shifting;
-    2: state <= shifting_finished ? 3 : 2;
+    2: state <= (remaining_send == 0) ? 3 : 2;
     3: state <= 3;
+//    4: state <= ; 
     default: state <= state;
   endcase
   
-//?????
-always @(negedge clk)
-  enable_shifting <= ~chip_select;//(state == 2) ? 1 : 0;
   
 //     always @(negedge clk)
 //    data_clock_enabled <= ~chip_select;
@@ -85,50 +84,47 @@ always @(negedge clk)
 //assign data_clock = data_clock_enabled ? clk : 0;
   
 always @(state)
-  chip_select <= (state > 1) ? 0 : 1;
+  chip_select <= (state > 0) ? 0 : 1;
 
 always @*
 if (state == 1)
 begin
   init_counter <= 1;
-  in_data <= 32'h9000_0001;
+  //in_data <= 32'h9000_0001;
 end else
   init_counter <= 0;
 
+always @(posedge clk)
+if (state == 1)
+  remaining_send <= 31;
+else
+  remaining_send <= remaining_send - 1;
+  
+always @(negedge clk)
+if (state == 3)
+  remaining_receive <= 7;
+else if (state == 4)
+  remaining_receive <= remaining_receive - 1;
+else
+  remaining_receive <= remaining_receive;
+  
 //always @(posedge clk)
 //  init_counter <= (state == 1) ? 1 : 0; 
 
 shift_out_reg send_reg (
-  shift_out_clk,
+  clk,
   in_data,
   init_counter,
-  shifting_finished,
   out_bit  
     );
 
-always @(posedge read_shifting_finished)
-  shifted_data <= {shift_out_wire[7:0]}; 
+//always @(posedge read_shifting_finished)
+//  shifted_data <= {shift_out_wire[7:0]}; 
 
 shift_in_reg recive_reg (
-  shift_in_clk,//??????????
+  clk,//??????????
   in_bit,
-  shift_out_wire,// out data??????
-  init_counter,
-  read_shifting_finished
+  shift_out_wire// out data??????
     );
-
-/*
-module shift_reg(
-shift_clk,
-in_bit,
-in_data,
-out_data,
-init_counter,
-shifting_finished,
-out_bit,
-shift_in_out //in=1, out =0
-    );
-
-*/
 
 endmodule
