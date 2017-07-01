@@ -74,6 +74,7 @@ wire [7:0] data_out;
 //wire in_bit;
 //wire chip_select;
 wire data_clk;
+wire data_clk_pre;
 wire reset;
 assign spi_hold = 1;
 assign spi_wp = 1;
@@ -96,7 +97,7 @@ end*/
 
 ila_0  debugger(
   clk,
-  clk_out,
+  spi_so,
   spi_si,  
   chip_select,
   data_clk
@@ -151,6 +152,9 @@ wire CLK_open;
 wire USRDONEO_open;
 wire USRDONETS_open;
 
+assign data_clk_pre = (dd < 20) ? clk_out : data_clk;
+
+
    STARTUPE2 #(
       .PROG_USR("FALSE"),  // Activate program event security feature. Requires encrypted bitstreams.
       .SIM_CCLK_FREQ(0.0)  // Set the Configuration Clock Frequency(ns) for simulation.
@@ -160,15 +164,15 @@ wire USRDONETS_open;
       .CFGMCLK(CFGMCLK_open),     // 1-bit output: Configuration internal oscillator clock output
       .EOS(EOS_open),             // 1-bit output: Active high output signal indicating the End Of Startup.
       .PREQ(PREQ_open),           // 1-bit output: PROGRAM request to fabric output
-      .CLK(CLK_open),             // 1-bit input: User start-up clock input
+      .CLK(0),             // 1-bit input: User start-up clock input
       .GSR(wire_gnd),             // 1-bit input: Global Set/Reset input (GSR cannot be used for the port name)
       .GTS(wire_gnd),             // 1-bit input: Global 3-state input (GTS cannot be used for the port name)
       .KEYCLEARB(wire_gnd), // 1-bit input: Clear AES Decrypter Key input from Battery-Backed RAM (BBRAM)
       .PACK(wire_gnd),           // 1-bit input: PROGRAM acknowledge input
-      .USRCCLKO(data_clk),   // 1-bit input: User CCLK input
+      .USRCCLKO(data_clk_pre),   // 1-bit input: User CCLK input
       .USRCCLKTS(wire_gnd), // 1-bit input: User CCLK 3-state enable input
-      .USRDONEO(USRDONEO_open),   // 1-bit input: User DONE pin output control
-      .USRDONETS(USRDONETS_open)  // 1-bit input: User DONE 3-state enable output
+      .USRDONEO(1),   // 1-bit input: User DONE pin output control
+      .USRDONETS(1)  // 1-bit input: User DONE 3-state enable output
    );
 
    // End of STARTUPE2_inst instantiation

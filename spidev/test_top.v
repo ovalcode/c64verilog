@@ -74,7 +74,11 @@ wire [7:0] data_out_sim;
 
 assign vcc_wire = 1;
 
-     s25fl032p mod_0
+     s25fl032p # (
+       .mem_file_name("/home/johan/test.bin")
+     )
+     
+      mod_0
      (
          data_clk,
          out_bit,         

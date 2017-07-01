@@ -44,18 +44,19 @@ wire shifting_finished;
 wire read_shifting_finished;
 wire out_bit;
 wire [7:0] shift_out_wire;
-reg [2:0] state = 0;
+(*KEEP = "FALSE"*)  reg [2:0] state = 0;
 reg init_counter = 0;
 output reg chip_select = 1;
 wire vcc_wire;
 wire gnd_wire;
 wire floating_wire;
 reg [7:0] shifted_data;
-reg [31:0] in_data = 32'h9000_0001;
-reg [4:0] remaining_send;
-reg [2:0] remaining_receive;
+reg [31:0] in_data = 32'h0300_0003;
+(*KEEP = "FALSE"*) reg [4:0] remaining_send;
+(*KEEP = "FALSE"*)  reg [2:0] remaining_receive;
+reg [7:0] out_data;
 
-assign data_out = shifted_data;
+assign data_out = out_data;//shifted_data;
 assign vcc_wire = 1;
 assign gnd_wire = 0;
 //NB!!!
@@ -71,7 +72,9 @@ always @(posedge clk)
     0: state <= 1;
     1: state <= 2; // status 2 = start shifting;
     2: state <= (remaining_send == 0) ? 3 : 2;
-    3: state <= 3;
+    3: state <= 4;
+    4: state <= (remaining_receive == 0) ? 5 : 4;
+    5: state <= 5;
 //    4: state <= ; 
     default: state <= state;
   endcase
@@ -84,7 +87,7 @@ always @(posedge clk)
 //assign data_clock = data_clock_enabled ? clk : 0;
   
 always @(negedge clk)
-  chip_select <= (state > 0) ? 0 : 1;
+  chip_select <= (state > 0 & state < 5) ? 0 : 1;
 
 always @*
 if (state == 1)
@@ -100,7 +103,7 @@ if (state == 1)
 else
   remaining_send <= remaining_send - 1;
   
-always @(negedge clk)
+always @(posedge clk)
 if (state == 3)
   remaining_receive <= 7;
 else if (state == 4)
@@ -108,6 +111,10 @@ else if (state == 4)
 else
   remaining_receive <= remaining_receive;
   
+
+always @(negedge clk)
+  if ((state == 4) & (remaining_receive == 1))
+  out_data <= shift_out_wire;
 //always @(posedge clk)
 //  init_counter <= (state == 1) ? 1 : 0; 
 
