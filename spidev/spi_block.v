@@ -56,6 +56,7 @@ reg [31:0] in_data = 32'h0300_0003;
 (*KEEP = "FALSE"*)  reg [2:0] remaining_receive;
 reg [7:0] out_data;
 
+
 assign data_out = out_data;//shifted_data;
 assign vcc_wire = 1;
 assign gnd_wire = 0;
@@ -72,9 +73,9 @@ always @(posedge clk)
     0: state <= 1;
     1: state <= 2; // status 2 = start shifting;
     2: state <= (remaining_send == 0) ? 3 : 2;
-    3: state <= 4;
-    4: state <= (remaining_receive == 0) ? 5 : 4;
-    5: state <= 5;
+    //3: state <= 4;
+    3: state <= (remaining_receive == 0) ? 4 : 3;
+    4: state <= 4;
 //    4: state <= ; 
     default: state <= state;
   endcase
@@ -104,16 +105,16 @@ else
   remaining_send <= remaining_send - 1;
   
 always @(posedge clk)
-if (state == 3)
+if (state == 1)
   remaining_receive <= 7;
-else if (state == 4)
+else if (state >= 3)
   remaining_receive <= remaining_receive - 1;
 else
   remaining_receive <= remaining_receive;
   
 
 always @(negedge clk)
-  if ((state == 4) & (remaining_receive == 1))
+  if ((state >= 3) & (remaining_receive == 0))
   out_data <= shift_out_wire;
 //always @(posedge clk)
 //  init_counter <= (state == 1) ? 1 : 0; 
