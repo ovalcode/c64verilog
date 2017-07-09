@@ -86,6 +86,12 @@ parameter
  * define some signals for watching in simulator output
  */
 
+initial begin
+  AXYS[0] <= 22;
+  AXYS[1] <= 33;
+  AXYS[2] <= 44;
+  AXYS[3] <= 55;
+end
 
 `ifdef SIM
 wire [7:0]   A = AXYS[SEL_A];           // Accumulator
@@ -671,8 +677,8 @@ always @*
 /*
  * ALU B Input mux
  */
-
 always @*
+
     case( state )
          BRA1,
          RTS1,

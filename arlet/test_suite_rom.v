@@ -83,6 +83,7 @@ module test_suite_rom(
     wire clk_out;
     //wire nc_wire;
     reg [7:0] combined_data_out;
+    reg [3:0] blk_selector;
     assign DO = combined_data_out;
     
    BRAM_SINGLE_MACRO #(
@@ -2802,7 +2803,7 @@ module test_suite_rom(
       .INIT_7C(256'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF),
       .INIT_7D(256'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF),
       .INIT_7E(256'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF),
-      .INIT_7F(256'h36CB36C636C3FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF),
+      .INIT_7F(256'h36CB040036C3FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF),
       
       // The next set of INITP_xx are for the parity bits
       .INITP_00(256'h0000000000000000000000000000000000000000000000000000000000000000),
@@ -2836,10 +2837,13 @@ module test_suite_rom(
 
 
 //===============================================================================================
+
+always @(posedge clk)
+blk_selector <= addr[15:12];
  
     
     always @*
-    case (addr[14:12])
+    case (blk_selector)
       4'b0000: combined_data_out = DATA_OUT_BLOCK_0;
       4'b0001: combined_data_out = DATA_OUT_BLOCK_1;
       4'b0010: combined_data_out = DATA_OUT_BLOCK_2;         
