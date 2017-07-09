@@ -26,6 +26,8 @@ module top(
   output [15:0] led
     );
     
+    
+    //order of combined rom: basic -> kernel -> char
 //reg clk = 0;    
     reg reset = 1;
     wire [15:0] addr;

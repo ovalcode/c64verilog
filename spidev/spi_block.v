@@ -27,13 +27,17 @@ module spi_block(
  data_out,
  chip_select,
  data_clk,
+ data_ready,
+ finished_reading,
  reset
     );
 
 input clk;
 input reset;
+input finished_reading;
 output out_bit;
 output [7:0] data_out;
+output data_ready;
 //input wire in_bit;
 wire shift_out_clk;
 wire shift_in_clk;
@@ -51,13 +55,16 @@ wire vcc_wire;
 wire gnd_wire;
 wire floating_wire;
 reg [7:0] shifted_data;
-reg [31:0] in_data = 32'h0300_0003;
+reg [31:0] in_data = 32'h0300_0000;
 (*KEEP = "FALSE"*) reg [4:0] remaining_send;
 (*KEEP = "FALSE"*)  reg [2:0] remaining_receive;
-reg [7:0] out_data;
+//reg [7:0] out_data;
 
+assign data_ready = (state >= 3) & (remaining_receive == 0);
 
-assign data_out = out_data;//shifted_data;
+//assign data_out = out_data;//shifted_data;
+assign data_out = shift_out_wire;//shifted_data;
+
 assign vcc_wire = 1;
 assign gnd_wire = 0;
 //NB!!!
@@ -88,7 +95,7 @@ always @(posedge clk)
 //assign data_clock = data_clock_enabled ? clk : 0;
   
 always @(negedge clk)
-  chip_select <= (state > 0 & state < 5) ? 0 : 1;
+  chip_select <= (state > 0 & !finished_reading) ? 0 : 1;
 
 always @*
 if (state == 1)
@@ -113,9 +120,9 @@ else
   remaining_receive <= remaining_receive;
   
 
-always @(negedge clk)
-  if ((state >= 3) & (remaining_receive == 0))
-  out_data <= shift_out_wire;
+//always @(negedge clk)
+//  if ((state >= 3) & (remaining_receive == 0))
+  //out_data <= shift_out_wire;
 //always @(posedge clk)
 //  init_counter <= (state == 1) ? 1 : 0; 
 

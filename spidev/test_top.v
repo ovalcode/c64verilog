@@ -67,9 +67,17 @@ reg clk = 0;
 reg reset = 1;     
 wire out_bit;
 wire chip_select;
+wire data_ready;
 wire data_clk;
 wire vcc_wire;
 wire out;
+
+reg [15:0] init_rom_counter = 0;
+
+reg [7:0] roms [20479:0];
+
+reg rom_init_finished = 0;
+
 wire [7:0] data_out_sim;
 
 assign vcc_wire = 1;
@@ -97,6 +105,8 @@ assign vcc_wire = 1;
 
      initial begin
      #1000000 reset <= 0;
+     #1000000
+     $display("hello %d %d %d %d %d %d", roms[0], roms[1], roms[2], roms[3], roms[4], roms[5]);
      end
      
 spi_block my_spi (
@@ -106,8 +116,23 @@ spi_block my_spi (
       data_out_sim,
       chip_select,
       data_clk,
+      data_ready,
+      rom_init_finished,
       reset
          );
+         
+  always @(negedge clk)
+  begin
+    if (data_ready & !rom_init_finished)
+    begin
+      roms[init_rom_counter] <= data_out_sim;
+      init_rom_counter <= init_rom_counter + 1;          
+    end
+      
+  end         
+  
+  always @(posedge clk)
+    rom_init_finished <= init_rom_counter == 20480;  
 
     always #20
       clk = !clk;
