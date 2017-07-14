@@ -23,7 +23,7 @@
 module rom_chargen(
   input clk,
   input [11:0] addr,
-  output DO
+  output [7:0] DO
   );
   
   
