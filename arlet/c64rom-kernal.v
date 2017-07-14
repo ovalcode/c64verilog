@@ -23,7 +23,7 @@
 module rom_kernal(
   input clk,
   input [12:0] addr,
-  output DO
+  output [7:0] DO
   );
   
   
